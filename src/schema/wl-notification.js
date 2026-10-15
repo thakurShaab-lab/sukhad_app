@@ -1,0 +1,41 @@
+const { mysqlTable, primaryKey, index, int, tinyint, varchar, text, date, datetime } = require("drizzle-orm/mysql-core");
+
+const wlNotification = mysqlTable("wl_notification", {
+	notificationId: int("notification_id").autoincrement().notNull(),
+	nfType: tinyint("nf_type").default(1).notNull(),
+	memberType: tinyint("member_type").default(3).notNull(),
+	typeManage: tinyint("type_manage").notNull(),
+	typeAction: tinyint("type_action").notNull(),
+	notificationTitle: varchar("notification_title", { length: 255 }),
+	notificationImage: varchar("notification_image", { length: 100 }),
+	description: text(),
+	memByType: tinyint("mem_by_type").notNull(),
+	refTypeId: int("ref_type_id").notNull(),
+	refProdType: int("ref_prod_type").notNull(),
+	refItemId: int("ref_item_id").notNull(),
+	isRepeat: tinyint("is_repeat").default(0).notNull(),
+	repeatFromDay: varchar("repeat_from_day", { length: 20 }).notNull(),
+	repeatToDay: varchar("repeat_to_day", { length: 20 }).notNull(),
+	repeatTimes: tinyint("repeat_times").notNull(),
+	sendSms: tinyint("send_sms").default(0).notNull(),
+	scheduleDate: date("schedule_date", { mode: 'string' }).notNull(),
+	scheduleTime: varchar("schedule_time", { length: 20 }).notNull(),
+	scheduleDateTime: datetime("schedule_date_time", { mode: 'string'}).notNull(),
+	scheduleEndDate: date("schedule_end_date", { mode: 'string' }).notNull(),
+	hasMembers: tinyint("has_members").default(2).notNull(),
+	createdAt: datetime("created_at", { mode: 'string'}),
+	updatedAt: datetime("updated_at", { mode: 'string'}).notNull(),
+	status: tinyint().default(0).notNull(),
+	lastStatus: tinyint("last_status").notNull(),
+	trashedBy: int("trashed_by").notNull(),
+	trashed: tinyint().notNull(),
+	isReverted: tinyint("is_reverted").notNull(),
+	urlHint: varchar("url_hint", { length: 25 }),
+	urlParams: text("url_params"),
+},
+(table) => [
+	index("mem_by_type").on(table.memByType, table.refTypeId, table.refProdType, table.refItemId),
+	primaryKey({ columns: [table.notificationId], name: "wl_notification_notification_id"}),
+]);
+
+module.exports = { wlNotification };

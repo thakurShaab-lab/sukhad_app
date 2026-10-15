@@ -2,11 +2,15 @@ const express = require('express')
 const os = require('os')
 const cors = require('cors')
 const helmet = require('helmet')
+const morgan = require('morgan')
+const rateLimit = require('express-rate-limit')
 const dotenv = require('dotenv').config()
+const env = require('./src/config/env')
+const logger = require('./src/utils/logger');
+require('./src/config/db')
+require('./src/config/drizzle')
 
 const app = express()
-
-const PORT = process.env.PORT || 3010
 
 app.disable('x-powered-by');
 
@@ -26,6 +30,23 @@ app.use(
 
 app.use(cors())
 app.use(express.json())
+
+app.use(
+  morgan('combined', {
+    stream: { write: (message) => logger.info(message.trim()) },
+  })
+)
+
+app.use(
+  rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 300,
+    standardHeaders: true,
+    legacyHeaders: false,
+  })
+)
+
+app.use('/uploaded_files', express.static(env.uploadDir))
 
 app.get('/', (req, res) => {
     res.json({
@@ -77,6 +98,15 @@ app.get('/api', (req, res) => {
     })
 })
 
-app.listen(PORT, '127.0.0.1', () => {
-    console.log(`Server is running at http://127.0.0.1:${PORT}`)
+app.listen(env.port, '127.0.0.1', () => {
+    logger.info(`indicam-electronics-node-api listening on port ${env.port} (${env.nodeEnv})`);
+})
+
+process.on('unhandledRejection', (reason) => {
+  logger.error('Unhandled rejection', { reason })
+})
+
+process.on('SIGTERM', () => {
+  logger.info('SIGTERM received, shutting down')
+  server.close(() => process.exit(0))
 })

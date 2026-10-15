@@ -1,0 +1,40 @@
+const { mysqlTable, mysqlEnum, primaryKey, int, tinyint, varchar, text, datetime } = require("drizzle-orm/mysql-core");
+
+const wlCategories = mysqlTable("wl_categories", {
+	categoryId: int("category_id").autoincrement().notNull(),
+	catType: tinyint("cat_type").default(1).notNull(),
+	catLinks: varchar("cat_links", { length: 50 }),
+	categoryName: varchar("category_name", { length: 100 }).notNull(),
+	friendlyUrl: varchar("friendly_url", { length: 100 }).notNull(),
+	categoryImage: varchar("category_image", { length: 255 }),
+	categoryDescription: text("category_description").notNull(),
+	categoryTag: text("category_tag").notNull(),
+	subscriptionPageText: text("subscription_page_text"),
+	parentId: int("parent_id").default(0).notNull(),
+	isHome: mysqlEnum("is_home", ['1','0']).default('0').notNull(),
+	isMenu: mysqlEnum("is_menu", ['1','0']).default('0').notNull(),
+	isFooter: mysqlEnum("is_footer", ['0','1']).default('0').notNull(),
+	isFixed: mysqlEnum("is_fixed", ['1','0']).default('0').notNull(),
+	isAbout: tinyint("is_about").default(0),
+	aboutCent: int("about_cent"),
+	homeOurProducts: tinyint("home_our_products").default(0).notNull(),
+	sortOrder: int("sort_order"),
+	dateAdded: datetime("date_added", { mode: 'string'}).default('0000-00-00 00:00:00').notNull(),
+	dateModified: datetime("date_modified", { mode: 'string'}).default('0000-00-00 00:00:00').notNull(),
+	status: mysqlEnum(['0','1','2']).default('1').notNull(),
+	lastStatus: tinyint("last_status").notNull(),
+	trashedBy: int("trashed_by").notNull(),
+	trashed: tinyint().notNull(),
+	isReverted: tinyint("is_reverted").notNull(),
+	metaTitle: varchar("meta_title", { length: 100 }),
+	metaKeywords: varchar("meta_keywords", { length: 100 }),
+	metaDescription: varchar("meta_description", { length: 225 }),
+	categoryAlt: varchar("category_alt", { length: 200 }).notNull(),
+	categoryBanner: varchar("category_banner", { length: 150 }),
+	xlsType: mysqlEnum("xls_type", ['0','1']).default('0').notNull(),
+},
+(table) => [
+	primaryKey({ columns: [table.categoryId], name: "wl_categories_category_id"}),
+]);
+
+module.exports = { wlCategories };
