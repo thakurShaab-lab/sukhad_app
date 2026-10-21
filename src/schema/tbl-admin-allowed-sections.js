@@ -1,4 +1,4 @@
-const { mysqlTable, primaryKey, int, varchar, text } = require("drizzle-orm/mysql-core");
+const { mysqlTable, primaryKey, int, varchar, text } = require("drizzle-orm/mysql-core")
 
 const tblAdminAllowedSections = mysqlTable("tbl_admin_allowed_sections", {
 	id: int().autoincrement().notNull(),
@@ -10,6 +10,6 @@ const tblAdminAllowedSections = mysqlTable("tbl_admin_allowed_sections", {
 },
 (table) => [
 	primaryKey({ columns: [table.id], name: "tbl_admin_allowed_sections_id"}),
-]);
+])
 
-module.exports = { tblAdminAllowedSections };
+module.exports = { tblAdminAllowedSections }

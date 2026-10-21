@@ -1,9 +1,10 @@
-require('dotenv').config();
+require('dotenv').config()
 
 module.exports = {
   nodeEnv: process.env.NODE_ENV || 'development',
   port: parseInt(process.env.PORT, 10) || 3000,
   apiBasePath: process.env.API_BASE_PATH || '/api',
+  staticFileBaseUrl: process.env.STATIC_FILE_BASE_URL || '',
 
   db: {
     host: process.env.DB_HOST,
@@ -16,7 +17,7 @@ module.exports = {
 
   legacyApiKey: process.env.LEGACY_API_KEY || '',
 
-  uploadDir: '/home/nodeapp/shukhad_app/uploaded_files',
+  uploadDir: process.env.UPLOAD_DIR || '',
 
   aws: {
     region: process.env.AWS_REGION || 'us-east-2',
@@ -27,7 +28,7 @@ module.exports = {
   corsAdminOrigin: process.env.CORS_ADMIN_ORIGIN || '',
 
   // KNET payment gateway terminal resource key, used to decrypt KNET's postback
-  // (Payment.php had a live key hardcoded in source; intentionally not copied here).
+  // (Payment.php had a live key hardcoded in source intentionally not copied here).
   knetTerminalResourceKey: process.env.KNET_TERMINAL_RESOURCE_KEY || '',
 
   // Dmailer.php never set explicit SMTP config (its config block was commented
@@ -41,4 +42,4 @@ module.exports = {
   },
 
   logLevel: process.env.LOG_LEVEL || 'info',
-};
+}

@@ -1,4 +1,4 @@
-const { mysqlTable, primaryKey, int, tinyint, varchar, tinytext, datetime } = require("drizzle-orm/mysql-core");
+const { mysqlTable, primaryKey, int, tinyint, varchar, tinytext, datetime } = require("drizzle-orm/mysql-core")
 
 const wlPartners = mysqlTable("wl_partners", {
 	partnerId: int("partner_id").autoincrement().notNull(),
@@ -16,6 +16,6 @@ const wlPartners = mysqlTable("wl_partners", {
 },
 (table) => [
 	primaryKey({ columns: [table.partnerId], name: "wl_partners_partner_id"}),
-]);
+])
 
-module.exports = { wlPartners };
+module.exports = { wlPartners }

@@ -1,4 +1,4 @@
-const { mysqlTable, mysqlEnum, primaryKey, int, tinyint, bigint, float, varchar, text, date, datetime } = require("drizzle-orm/mysql-core");
+const { mysqlTable, mysqlEnum, primaryKey, int, tinyint, bigint, float, varchar, text, date, datetime } = require("drizzle-orm/mysql-core")
 
 const tblAdmin = mysqlTable("tbl_admin", {
 	adminId: int("admin_id").autoincrement().notNull(),
@@ -60,6 +60,6 @@ const tblAdmin = mysqlTable("tbl_admin", {
 },
 (table) => [
 	primaryKey({ columns: [table.adminId], name: "tbl_admin_admin_id"}),
-]);
+])
 
-module.exports = { tblAdmin };
+module.exports = { tblAdmin }

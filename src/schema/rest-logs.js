@@ -1,4 +1,4 @@
-const { mysqlTable, primaryKey, int, smallint, float, varchar, text } = require("drizzle-orm/mysql-core");
+const { mysqlTable, primaryKey, int, smallint, float, varchar, text } = require("drizzle-orm/mysql-core")
 
 const restLogs = mysqlTable("rest_logs", {
 	id: int().autoincrement().notNull(),
@@ -14,6 +14,6 @@ const restLogs = mysqlTable("rest_logs", {
 },
 (table) => [
 	primaryKey({ columns: [table.id], name: "rest_logs_id"}),
-]);
+])
 
-module.exports = { restLogs };
+module.exports = { restLogs }

@@ -1,0 +1,672 @@
+{
+	"info": {
+		"_postman_id": "e1c6504f-36e2-4a05-ab16-6b53f0f38068",
+		"name": "Shukhad",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "53781120",
+		"_collection_link": "https://sanjeev-weblink14008-1844342.postman.co/workspace/Sanjeev-Thakur's-Workspace~feab2153-67ad-44a1-8d85-afbf2a28bda5/collection/53781120-e1c6504f-36e2-4a05-ab16-6b53f0f38068?action=share&source=collection_link&creator=53781120"
+	},
+	"item": [
+		{
+			"name": "CMS",
+			"item": [
+				{
+					"name": "Detail",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{auth_token}}",
+								"type": "text"
+							},
+							{
+								"key": "x-app-id",
+								"value": "{{x-app-id}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "x-device-id",
+								"value": "{{x-device-id}}",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"app_id\": \"app123\",\r\n    \"device_id\": \"device123\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/cms-pages/list?page=aboutus",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"cms-pages",
+								"list"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "aboutus"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Anout Us",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "1c319fb40bef6d04bc92461da3bc639d921980ca68d5232d85bf73945f6889c4",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"app_id\": \"app123\",\r\n    \"device_id\": \"device123\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{local_base_url}}/cms-pages/about-us?page=aboutus",
+							"host": [
+								"{{local_base_url}}"
+							],
+							"path": [
+								"cms-pages",
+								"about-us"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "aboutus"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Category",
+			"item": [
+				{
+					"name": "List",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{auth_token}}",
+								"type": "text"
+							},
+							{
+								"key": "x-app-id",
+								"value": "{{x-app-id}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "x-device-id",
+								"value": "{{x-device-id}}",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"app_id\": \"app123\",\r\n    \"device_id\": \"device123\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{local_base_url}}/category-pages/list",
+							"host": [
+								"{{local_base_url}}"
+							],
+							"path": [
+								"category-pages",
+								"list"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Sub Category",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{auth_token}}",
+								"type": "text"
+							},
+							{
+								"key": "x-app-id",
+								"value": "{{x-app-id}}",
+								"type": "text"
+							},
+							{
+								"key": "x-device-id",
+								"value": "{{x-device-id}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{local_base_url}}/category-pages/sub-cat-details?categoryId=1",
+							"host": [
+								"{{local_base_url}}"
+							],
+							"path": [
+								"category-pages",
+								"sub-cat-details"
+							],
+							"query": [
+								{
+									"key": "categoryId",
+									"value": "1"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Home_Page",
+			"item": [
+				{
+					"name": "Home_Page",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{auth_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"app_id\": \"app123\",\r\n    \"device_id\": \"device123\",\r\n    \"app_type\": \"android\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{local_base_url}}/home-pages/home",
+							"host": [
+								"{{local_base_url}}"
+							],
+							"path": [
+								"home-pages",
+								"home"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Product",
+			"item": [
+				{
+					"name": "List",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{auth_token}}",
+								"type": "text"
+							},
+							{
+								"key": "x-app-id",
+								"value": "{{x-app-id}}",
+								"type": "text"
+							},
+							{
+								"key": "x-device-id",
+								"value": "{{x-device-id}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"app_id\": \"app123\",\r\n    \"device_id\": \"device123\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{local_base_url}}/product-pages/list?cat_id=2&sub_cat_id=1&prod_make=Toyota&car_model=Altis&sort=az&ref_id=TOY-25051-0D148",
+							"host": [
+								"{{local_base_url}}"
+							],
+							"path": [
+								"product-pages",
+								"list"
+							],
+							"query": [
+								{
+									"key": "cat_id",
+									"value": "2"
+								},
+								{
+									"key": "sub_cat_id",
+									"value": "1"
+								},
+								{
+									"key": "prod_make",
+									"value": "Toyota"
+								},
+								{
+									"key": "car_model",
+									"value": "Altis"
+								},
+								{
+									"key": "sort",
+									"value": "az"
+								},
+								{
+									"key": "ref_id",
+									"value": "TOY-25051-0D148"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Detail",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{auth_token}}",
+								"type": "text"
+							},
+							{
+								"key": "x-app-id",
+								"value": "{{x-app-id}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "x-device-id",
+								"value": "{{x-device-id}}",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"app_id\": \"app123\",\r\n    \"device_id\": \"device123\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{local_base_url}}/product-pages/detail?productId=2",
+							"host": [
+								"{{local_base_url}}"
+							],
+							"path": [
+								"product-pages",
+								"detail"
+							],
+							"query": [
+								{
+									"key": "productId",
+									"value": "2"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "By Category",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{auth_token}}",
+								"type": "text"
+							},
+							{
+								"key": "x-app-id",
+								"value": "{{x-app-id}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "x-device-id",
+								"value": "{{x-device-id}}",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"app_id\": \"app123\",\r\n    \"device_id\": \"device123\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/product-pages/category?categoryId=2",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"product-pages",
+								"category"
+							],
+							"query": [
+								{
+									"key": "categoryId",
+									"value": "2"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Search",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{auth_token}}",
+								"type": "text"
+							},
+							{
+								"key": "x-app-id",
+								"value": "{{x-app-id}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "x-device-id",
+								"value": "{{x-device-id}}",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"app_id\": \"app123\",\r\n    \"device_id\": \"device123\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/product-pages/search?sub_cat_id=1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"product-pages",
+								"search"
+							],
+							"query": [
+								{
+									"key": "sub_cat_id",
+									"value": "1"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Enquiry",
+			"item": [
+				{
+					"name": "Enquiry",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{auth_token}}",
+								"type": "text"
+							},
+							{
+								"key": "x-app-id",
+								"value": "{{x-app-id}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "x-device-id",
+								"value": "{{x-device-id}}",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"app_id\": \"app123\",\r\n    \"device_id\": \"device123\",\r\n    \"type\": 2,\r\n    \"entity_title\": \"Prodtct Detail\",\r\n    \"product_id\": 2,\r\n    \"full_name\": \"Sanjeev Thakur\",\r\n    \"mobile_number\": \"+919876543210\",\r\n    \"email\": \"sanjeev@example.com\",\r\n    \"enquiry\": \"I would like to know the price and availability of this product.\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{local_base_url}}/enquiry_pages/enquiry",
+							"host": [
+								"{{local_base_url}}"
+							],
+							"path": [
+								"enquiry_pages",
+								"enquiry"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Gallery",
+			"item": [
+				{
+					"name": "Gallery",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{auth_token}}",
+								"type": "text"
+							},
+							{
+								"key": "x-app-id",
+								"value": "{{x-app-id}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "x-device-id",
+								"value": "{{x-device-id}}",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"app_id\": \"app123\",\r\n    \"device_id\": \"device123\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{local_base_url}}/gallery_pages/gallery?type=images&id=3",
+							"host": [
+								"{{local_base_url}}"
+							],
+							"path": [
+								"gallery_pages",
+								"gallery"
+							],
+							"query": [
+								{
+									"key": "type",
+									"value": "images"
+								},
+								{
+									"key": "id",
+									"value": "3"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Testimonial",
+			"item": [
+				{
+					"name": "List",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{auth_token}}",
+								"type": "text"
+							},
+							{
+								"key": "x-app-id",
+								"value": "{{x-app-id}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "x-device-id",
+								"value": "{{x-device-id}}",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"app_id\": \"app123\",\r\n    \"device_id\": \"device123\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{local_base_url}}/testimonials_pages/list",
+							"host": [
+								"{{local_base_url}}"
+							],
+							"path": [
+								"testimonials_pages",
+								"list"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{auth_token}}",
+								"type": "text"
+							},
+							{
+								"key": "x-app-id",
+								"value": "{{x-app-id}}",
+								"type": "text",
+								"disabled": true
+							},
+							{
+								"key": "x-device-id",
+								"value": "{{x-device-id}}",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "app_id",
+									"value": "app123",
+									"type": "text"
+								},
+								{
+									"key": "device_id",
+									"value": "device123",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{local_base_url}}/testimonials_pages/list",
+							"host": [
+								"{{local_base_url}}"
+							],
+							"path": [
+								"testimonials_pages",
+								"list"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

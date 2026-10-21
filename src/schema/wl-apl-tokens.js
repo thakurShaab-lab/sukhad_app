@@ -1,4 +1,4 @@
-const { mysqlTable, mysqlEnum, primaryKey, int, varchar, timestamp } = require("drizzle-orm/mysql-core");
+const { mysqlTable, mysqlEnum, primaryKey, int, varchar, timestamp } = require("drizzle-orm/mysql-core")
 
 const wlAplTokens = mysqlTable("wl_apl_tokens", {
 	apiTokenId: int("api_token_id").autoincrement().notNull(),
@@ -13,6 +13,6 @@ const wlAplTokens = mysqlTable("wl_apl_tokens", {
 },
 (table) => [
 	primaryKey({ columns: [table.apiTokenId], name: "wl_apl_tokens_api_token_id"}),
-]);
+])
 
-module.exports = { wlAplTokens };
+module.exports = { wlAplTokens }

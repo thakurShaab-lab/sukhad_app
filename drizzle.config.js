@@ -1,5 +1,5 @@
-require('dotenv').config();
-const { defineConfig } = require('drizzle-kit');
+require('dotenv').config()
+const { defineConfig } = require('drizzle-kit')
 
 module.exports = defineConfig({
   dialect: 'mysql',
@@ -14,4 +14,4 @@ module.exports = defineConfig({
   },
   verbose: true,
   strict: true,
-});
+})

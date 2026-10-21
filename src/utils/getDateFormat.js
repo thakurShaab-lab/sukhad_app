@@ -1,4 +1,4 @@
-const dayjs = require('dayjs');
+const dayjs = require('dayjs')
 
 const FORMATS = {
   1: (sep) => `DD MMM${sep} YYYY`,
@@ -13,19 +13,14 @@ const FORMATS = {
   10: () => `MMMM YYYY`,
   11: () => `DD`,
   12: (sep) => `DD${sep}MMM YYYY`,
-};
-
-/**
- * Port of apps/helpers/utils_helper.php::getDateFormat(). PHP's strtotime()
- * on an unparseable date falls back to `false` -> date() treats that as
- * epoch 0; dayjs(0) reproduces the same fallback here.
- */
-function getDateFormat(date, format, separator1 = ',') {
-  const parsed = dayjs(date);
-  const d = parsed.isValid() ? parsed : dayjs(0);
-  const template = FORMATS[format];
-  if (!template) return undefined;
-  return d.format(template(separator1));
 }
 
-module.exports = { getDateFormat };
+function getDateFormat(date, format, separator1 = ',') {
+  const parsed = dayjs(date)
+  const d = parsed.isValid() ? parsed : dayjs(0)
+  const template = FORMATS[format]
+  if (!template) return undefined
+  return d.format(template(separator1))
+}
+
+module.exports = { getDateFormat }

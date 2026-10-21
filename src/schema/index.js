@@ -33,4 +33,4 @@ module.exports = {
   ...require("./wl-transactions"),
   ...require("./wl-videos"),
   ...require("./wl-webhook-details"),
-};
+}

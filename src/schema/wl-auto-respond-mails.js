@@ -1,4 +1,4 @@
-const { mysqlTable, mysqlEnum, primaryKey, int, varchar, text, datetime } = require("drizzle-orm/mysql-core");
+const { mysqlTable, mysqlEnum, primaryKey, int, varchar, text, datetime } = require("drizzle-orm/mysql-core")
 
 const wlAutoRespondMails = mysqlTable("wl_auto_respond_mails", {
 	id: int().autoincrement().notNull(),
@@ -10,6 +10,6 @@ const wlAutoRespondMails = mysqlTable("wl_auto_respond_mails", {
 },
 (table) => [
 	primaryKey({ columns: [table.id], name: "wl_auto_respond_mails_id"}),
-]);
+])
 
-module.exports = { wlAutoRespondMails };
+module.exports = { wlAutoRespondMails }

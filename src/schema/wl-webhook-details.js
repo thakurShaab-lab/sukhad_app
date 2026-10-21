@@ -1,4 +1,4 @@
-const { mysqlTable, primaryKey, int, varchar, text, datetime } = require("drizzle-orm/mysql-core");
+const { mysqlTable, primaryKey, int, varchar, text, datetime } = require("drizzle-orm/mysql-core")
 
 const wlWebhookDetails = mysqlTable("wl_webhook_details", {
 	id: int().autoincrement().notNull(),
@@ -9,6 +9,6 @@ const wlWebhookDetails = mysqlTable("wl_webhook_details", {
 },
 (table) => [
 	primaryKey({ columns: [table.id], name: "wl_webhook_details_id"}),
-]);
+])
 
-module.exports = { wlWebhookDetails };
+module.exports = { wlWebhookDetails }

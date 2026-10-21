@@ -1,4 +1,4 @@
-const { mysqlTable, primaryKey, index, int, varchar, datetime } = require("drizzle-orm/mysql-core");
+const { mysqlTable, primaryKey, index, int, varchar, datetime } = require("drizzle-orm/mysql-core")
 
 const wlResetPwdLink = mysqlTable("wl_reset_pwd_link", {
 	id: int().autoincrement().notNull(),
@@ -10,6 +10,6 @@ const wlResetPwdLink = mysqlTable("wl_reset_pwd_link", {
 (table) => [
 	index("user_id").on(table.userId),
 	primaryKey({ columns: [table.id], name: "wl_reset_pwd_link_id"}),
-]);
+])
 
-module.exports = { wlResetPwdLink };
+module.exports = { wlResetPwdLink }

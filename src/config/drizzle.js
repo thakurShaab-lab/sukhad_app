@@ -1,6 +1,6 @@
-const { drizzle } = require('drizzle-orm/mysql2');
-const pool = require('./db');
+const { drizzle } = require('drizzle-orm/mysql2')
+const pool = require('./db')
 
-const db = drizzle(pool, { mode: 'default' });
+const db = drizzle(pool, { mode: 'default' })
 
-module.exports = db;
+module.exports = db

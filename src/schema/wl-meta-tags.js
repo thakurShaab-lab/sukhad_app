@@ -1,4 +1,4 @@
-const { mysqlTable, mysqlEnum, primaryKey, int, varchar } = require("drizzle-orm/mysql-core");
+const { mysqlTable, mysqlEnum, primaryKey, int, varchar } = require("drizzle-orm/mysql-core")
 
 const wlMetaTags = mysqlTable("wl_meta_tags", {
 	metaId: int("meta_id").autoincrement().notNull(),
@@ -13,6 +13,6 @@ const wlMetaTags = mysqlTable("wl_meta_tags", {
 },
 (table) => [
 	primaryKey({ columns: [table.metaId], name: "wl_meta_tags_meta_id"}),
-]);
+])
 
-module.exports = { wlMetaTags };
+module.exports = { wlMetaTags }

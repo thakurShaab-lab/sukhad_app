@@ -1,4 +1,4 @@
-const { mysqlTable, mysqlEnum, primaryKey, int, float, char, varchar, datetime } = require("drizzle-orm/mysql-core");
+const { mysqlTable, mysqlEnum, primaryKey, int, float, char, varchar, datetime } = require("drizzle-orm/mysql-core")
 
 const wlCurrencies = mysqlTable("wl_currencies", {
 	currencyId: int("currency_id").notNull(),
@@ -15,6 +15,6 @@ const wlCurrencies = mysqlTable("wl_currencies", {
 },
 (table) => [
 	primaryKey({ columns: [table.currencyId], name: "wl_currencies_currency_id"}),
-]);
+])
 
-module.exports = { wlCurrencies };
+module.exports = { wlCurrencies }

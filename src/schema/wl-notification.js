@@ -1,4 +1,4 @@
-const { mysqlTable, primaryKey, index, int, tinyint, varchar, text, date, datetime } = require("drizzle-orm/mysql-core");
+const { mysqlTable, primaryKey, index, int, tinyint, varchar, text, date, datetime } = require("drizzle-orm/mysql-core")
 
 const wlNotification = mysqlTable("wl_notification", {
 	notificationId: int("notification_id").autoincrement().notNull(),
@@ -36,6 +36,6 @@ const wlNotification = mysqlTable("wl_notification", {
 (table) => [
 	index("mem_by_type").on(table.memByType, table.refTypeId, table.refProdType, table.refItemId),
 	primaryKey({ columns: [table.notificationId], name: "wl_notification_notification_id"}),
-]);
+])
 
-module.exports = { wlNotification };
+module.exports = { wlNotification }

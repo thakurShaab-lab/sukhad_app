@@ -1,4 +1,4 @@
-const { mysqlTable, mysqlEnum, primaryKey, int, varchar, datetime } = require("drizzle-orm/mysql-core");
+const { mysqlTable, mysqlEnum, primaryKey, int, varchar, datetime } = require("drizzle-orm/mysql-core")
 
 const wlHeaderImages = mysqlTable("wl_header_images", {
 	id: int().autoincrement().notNull(),
@@ -12,6 +12,6 @@ const wlHeaderImages = mysqlTable("wl_header_images", {
 },
 (table) => [
 	primaryKey({ columns: [table.id], name: "wl_header_images_id"}),
-]);
+])
 
-module.exports = { wlHeaderImages };
+module.exports = { wlHeaderImages }

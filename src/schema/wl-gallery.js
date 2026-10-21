@@ -1,4 +1,4 @@
-const { mysqlTable, mysqlEnum, primaryKey, int, varchar, datetime } = require("drizzle-orm/mysql-core");
+const { mysqlTable, mysqlEnum, primaryKey, int, varchar, datetime } = require("drizzle-orm/mysql-core")
 
 const wlGallery = mysqlTable("wl_gallery", {
 	galleryId: int("gallery_id").autoincrement().notNull(),
@@ -14,6 +14,6 @@ const wlGallery = mysqlTable("wl_gallery", {
 },
 (table) => [
 	primaryKey({ columns: [table.galleryId], name: "wl_gallery_gallery_id"}),
-]);
+])
 
-module.exports = { wlGallery };
+module.exports = { wlGallery }

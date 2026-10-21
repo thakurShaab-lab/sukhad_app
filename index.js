@@ -6,17 +6,25 @@ const morgan = require('morgan')
 const rateLimit = require('express-rate-limit')
 const dotenv = require('dotenv').config()
 const env = require('./src/config/env')
-const logger = require('./src/utils/logger');
+const logger = require('./src/utils/logger')
 require('./src/config/db')
 require('./src/config/drizzle')
+const cmsPageRoutes = require('./src/routes/cms.routes')
+const homePageRoutes = require('./src/routes/home.routes')
+const categoryPageRoutes = require('./src/routes/category.routes')
+const productPageRoutes = require('./src/routes/product.routes')
+const enquiryPageRoutes = require('./src/routes/enquiry.routes')
+const galleryPageRoutes = require('./src/routes/gallery.routes')
+const testimonialsPageRoutes = require('./src/routes/testimonials.routes')
+
 
 const app = express()
 
-app.disable('x-powered-by');
+app.disable('x-powered-by')
 
-app.set('trust proxy', 1);
+app.set('trust proxy', 1)
 
-app.use(helmet());
+app.use(helmet())
 
 app.use(
   cors({
@@ -49,57 +57,66 @@ app.use(
 app.use('/uploaded_files', express.static(env.uploadDir))
 
 app.get('/', (req, res) => {
-    res.json({
-        status: 'Server running',
-        server: {
-            hostname: os.hostname(),
-            platform: os.platform(),
-            architecture: os.arch(),
-            osType: os.type(),
-            osRelease: os.release(),
-            uptime: `${Math.floor(os.uptime() / 3600)} hours ${Math.floor((os.uptime() % 3600) / 60)} minutes`
-        },
-        runtime: {
-            nodeVersion: process.version,
-            npmEnvironment: process.env.NODE_ENV || 'development',
-            processId: process.pid,
-            execPath: process.execPath
-        },
-        cpu: {
-            model: os.cpus()[0]?.model || 'Unknown',
-            cores: os.cpus().length,
-            loadAverage: os.loadavg()
-        },
-        memory: {
-            total: `${(os.totalmem() / 1024 ** 3).toFixed(2)} GB`,
-            free: `${(os.freemem() / 1024 ** 3).toFixed(2)} GB`,
-            used: `${((os.totalmem() - os.freemem()) / 1024 ** 3).toFixed(2)} GB`
-        }
-    })
+  res.json({
+    status: 'Server running',
+    server: {
+      hostname: os.hostname(),
+      platform: os.platform(),
+      architecture: os.arch(),
+      osType: os.type(),
+      osRelease: os.release(),
+      uptime: `${Math.floor(os.uptime() / 3600)} hours ${Math.floor((os.uptime() % 3600) / 60)} minutes`
+    },
+    runtime: {
+      nodeVersion: process.version,
+      npmEnvironment: process.env.NODE_ENV || 'development',
+      processId: process.pid,
+      execPath: process.execPath
+    },
+    cpu: {
+      model: os.cpus()[0]?.model || 'Unknown',
+      cores: os.cpus().length,
+      loadAverage: os.loadavg()
+    },
+    memory: {
+      total: `${(os.totalmem() / 1024 ** 3).toFixed(2)} GB`,
+      free: `${(os.freemem() / 1024 ** 3).toFixed(2)} GB`,
+      used: `${((os.totalmem() - os.freemem()) / 1024 ** 3).toFixed(2)} GB`
+    }
+  })
 })
 
 app.get('/api', (req, res) => {
-    res.json({
-        name: 'My Backend API',
-        description: 'Backend service built with Node.js and Express',
-        version: '1.0.0',
-        status: 'API is working',
-        timestamp: new Date().toISOString(),
-        endpoints: {
-            '/': {
-                method: 'GET',
-                description: 'Server status and system information'
-            },
-            '/api': {
-                method: 'GET',
-                description: 'API information and available endpoints'
-            }
-        },
-    })
+  res.json({
+    name: 'My Backend API',
+    description: 'Backend service built with Node.js and Express',
+    version: '1.0.0',
+    status: 'API is working',
+    timestamp: new Date().toISOString(),
+    endpoints: {
+      '/': {
+        method: 'GET',
+        description: 'Server status and system information'
+      },
+      '/api': {
+        method: 'GET',
+        description: 'API information and available endpoints'
+      }
+    },
+  })
 })
 
-app.listen(env.port, '127.0.0.1', () => {
-    logger.info(`indicam-electronics-node-api listening on port ${env.port} (${env.nodeEnv})`);
+app.use('/api/home-pages', homePageRoutes)
+app.use('/api/category-pages', categoryPageRoutes)
+app.use('/api/cms-pages', cmsPageRoutes)
+app.use('/api/product-pages', productPageRoutes)
+app.use('/api/enquiry_pages', enquiryPageRoutes)
+app.use('/api/gallery_pages', galleryPageRoutes)
+app.use('/api/testimonials_pages', testimonialsPageRoutes)
+
+
+const server = app.listen(env.port, '127.0.0.1', () => {
+  logger.info(`JV-Cat-Trade-node-api listening on port ${env.port} (${env.nodeEnv})`)
 })
 
 process.on('unhandledRejection', (reason) => {

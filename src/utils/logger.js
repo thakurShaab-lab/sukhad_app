@@ -1,6 +1,6 @@
-const winston = require('winston');
-const path = require('path');
-const env = require('../config/env');
+const winston = require('winston')
+const path = require('path')
+const env = require('../config/env')
 
 const logger = winston.createLogger({
   level: env.logLevel,
@@ -13,14 +13,14 @@ const logger = winston.createLogger({
     new winston.transports.File({ filename: path.join(process.cwd(), 'logs', 'error.log'), level: 'error' }),
     new winston.transports.File({ filename: path.join(process.cwd(), 'logs', 'combined.log') }),
   ],
-});
+})
 
 if (env.nodeEnv !== 'production') {
   logger.add(
     new winston.transports.Console({
       format: winston.format.combine(winston.format.colorize(), winston.format.simple()),
     })
-  );
+  )
 }
 
-module.exports = logger;
+module.exports = logger

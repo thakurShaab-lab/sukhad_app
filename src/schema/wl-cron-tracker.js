@@ -1,4 +1,4 @@
-const { mysqlTable, primaryKey, int, varchar, datetime } = require("drizzle-orm/mysql-core");
+const { mysqlTable, primaryKey, int, varchar, datetime } = require("drizzle-orm/mysql-core")
 
 const wlCronTracker = mysqlTable("wl_cron_tracker", {
 	logId: int("log_id").autoincrement().notNull(),
@@ -8,6 +8,6 @@ const wlCronTracker = mysqlTable("wl_cron_tracker", {
 },
 (table) => [
 	primaryKey({ columns: [table.logId], name: "wl_cron_tracker_log_id"}),
-]);
+])
 
-module.exports = { wlCronTracker };
+module.exports = { wlCronTracker }

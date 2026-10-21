@@ -1,4 +1,4 @@
-const { mysqlTable, primaryKey, int, varchar, text, datetime } = require("drizzle-orm/mysql-core");
+const { mysqlTable, primaryKey, int, varchar, text, datetime } = require("drizzle-orm/mysql-core")
 
 const wlConfiguration = mysqlTable("wl_configuration", {
 	sl: int().autoincrement().notNull(),
@@ -8,6 +8,6 @@ const wlConfiguration = mysqlTable("wl_configuration", {
 },
 (table) => [
 	primaryKey({ columns: [table.sl], name: "wl_configuration_sl"}),
-]);
+])
 
-module.exports = { wlConfiguration };
+module.exports = { wlConfiguration }
