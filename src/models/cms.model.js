@@ -6,7 +6,7 @@ const { wlAboutChoose } = require('../schema/wl-about-choose')
 const { wlExpertise } = require('../schema/wl-expertise')
 
 const findActivePagesByName = async (normalizedSearch) => {
-    return db
+    const pages = await db
         .select({
             pageId: wlCmsPages.pageId,
             parentId: wlCmsPages.parentId,
@@ -28,6 +28,8 @@ const findActivePagesByName = async (normalizedSearch) => {
         ) = ${normalizedSearch}`
             )
         )
+
+    return pages[0]
 }
 
 const findActivePageById = async (pageId) => {
@@ -110,8 +112,10 @@ const aboutUs = async (normalizedSearch) => {
         .where(eq(wlExpertise.status, 1))
         .orderBy(wlExpertise.sortOrder)
 
+    const aboutUs = aboutUsData[0] || []
+
     return {
-        aboutUs: aboutUsData[0] || null,
+        aboutUs,
         aboutChoose,
         expertise
     }

@@ -6,6 +6,6 @@ const upload = require('../utils/imageUpload')
 const router = express.Router()
 
 router.post('/list', authTokenMiddleware, deviceAuthMiddleware, testimonials.listTestimonials)
-router.post('/create', authTokenMiddleware, deviceAuthMiddleware, upload.single('photo'), testimonials.createTestimonial)
+router.post('/create', authTokenMiddleware, upload.single('photo'), deviceAuthMiddleware,testimonials.createTestimonial)
 
 module.exports = router

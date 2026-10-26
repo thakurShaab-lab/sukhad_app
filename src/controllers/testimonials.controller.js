@@ -1,4 +1,3 @@
-
 const fs = require('fs/promises')
 const path = require('path')
 const crypto = require('crypto')
@@ -16,7 +15,7 @@ const testimonialUploadDir = path.join(env.uploadDir, 'testimonials')
 const listTestimonials = async (req, res) => {
     try {
         if (!(await validateRequestDevice(req, res))) return
-        
+
         const testimonials = await testimonialsModel.getTestimonials()
 
         const data = await Promise.all(
@@ -68,13 +67,16 @@ const createTestimonial = async (req, res) => {
         if (!(await validateRequestDevice(req, res))) return
 
         if (
-            typeof friendly_url !== 'string' ||
-            !friendly_url.trim() ||
-            friendly_url.trim().length > 100
+            friendly_url !== undefined &&
+            friendly_url !== null &&
+            (
+                typeof friendly_url !== 'string' ||
+                friendly_url.trim().length > 100
+            )
         ) {
             return res.status(400).json({
                 success: false,
-                message: 'A valid friendly_url is required (maximum 100 characters)'
+                message: 'friendly_url must not exceed 100 characters'
             })
         }
 
@@ -165,8 +167,7 @@ const createTestimonial = async (req, res) => {
         }
 
         const testimonialData = {
-            memId,
-            friendlyUrl: friendly_url.trim(),
+            friendlyUrl: friendly_url,
             status: 1,
             postedDate: new Date()
                 .toISOString()

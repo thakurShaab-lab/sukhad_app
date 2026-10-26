@@ -16,7 +16,6 @@ const postEnquiry = async (req, res) => {
 
         if (!(await validateRequestDevice(req, res))) return
 
-        // Validate type only when provided
         let enquiryType
 
         if (type !== undefined && type !== null && type !== '') {
@@ -30,10 +29,20 @@ const postEnquiry = async (req, res) => {
             }
         }
 
-        // Validate product ID only when provided
-        let productId
+        const hasProductId =
+            product_id !== undefined && product_id !== null && product_id !== ''
 
-        if (product_id !== undefined && product_id !== null && product_id !== '') {
+        if (enquiryType === 1 && !hasProductId) {
+            return res.status(200).json({
+                success: false,
+                message: 'Product ID is required'
+            })
+        }
+
+        let productId
+        let product_name
+
+        if (hasProductId) {
             if (!/^[1-9]\d*$/.test(String(product_id))) {
                 return res.status(200).json({
                     success: false,
@@ -57,10 +66,11 @@ const postEnquiry = async (req, res) => {
                     success: false,
                     message: 'Product not found'
                 })
+            } else {
+                product_name = exists.productTitle
             }
         }
 
-        // Validate enquiry title only when provided
         let entityTitle
 
         if (entity_title !== undefined && entity_title !== null && entity_title !== '') {
@@ -79,7 +89,6 @@ const postEnquiry = async (req, res) => {
             entityTitle = entity_title.trim()
         }
 
-        // Validate full name only when provided
         let firstName
         let lastName
 
@@ -108,7 +117,6 @@ const postEnquiry = async (req, res) => {
             }
         }
 
-        // Validate mobile number only when provided
         let mobile
 
         if (mobile_number !== undefined && mobile_number !== null && mobile_number !== '') {
@@ -137,7 +145,6 @@ const postEnquiry = async (req, res) => {
             }
         }
 
-        // Validate email only when provided
         let emailAddress
 
         if (email !== undefined && email !== null && email !== '') {
@@ -155,7 +162,6 @@ const postEnquiry = async (req, res) => {
             emailAddress = email.trim()
         }
 
-        // Validate enquiry message only when provided
         let message
 
         if (enquiry !== undefined && enquiry !== null && enquiry !== '') {
@@ -173,7 +179,6 @@ const postEnquiry = async (req, res) => {
             message = enquiry.trim()
         }
 
-        // Include only fields that were supplied
         const enquiryData = {
             ...(productId !== undefined && { entityId: productId }),
             ...(enquiryType !== undefined && { type: enquiryType }),
@@ -190,12 +195,28 @@ const postEnquiry = async (req, res) => {
                 .replace('T', ' ')
         }
 
-        await enquiryModel.createEnquiry(enquiryData)
+        const result = await enquiryModel.createEnquiry(enquiryData)
 
-        return res.status(200).json({
-            success: true,
-            message: 'Enquiry submitted successfully'
-        })
+        if (type === 2) {
+            return res.status(200).json(
+                convertNulls({
+                    success: true,
+                    message: 'Enquiry Sent',
+                    productName: product_name,
+                    enquiryId: result[0].insertId
+                })
+            )
+        }
+        if (type === 1) {
+            return res.status(200).json(
+                convertNulls({
+                    success: true,
+                    message: 'Enquiry Submitted',
+                    enquiryId: result[0].insertId
+                })
+            )
+        }
+
     } catch (error) {
         console.error('Post enquiry API error:', error)
 

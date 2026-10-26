@@ -21,7 +21,7 @@ const categories = async (req, res) => {
 
 const subCategory = async (req, res) => {
     try {
-        const { categoryId } = req.query
+        const { categoryId } = req.body
 
         if (!(await validateRequestDevice(req, res))) return
 

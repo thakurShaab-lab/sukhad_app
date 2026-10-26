@@ -11,8 +11,7 @@ const noImagePath = `${BASE_URL}/no_image.png`
 
 const gallery = async (req, res) => {
     try {
-        const type = String(req.query.type || '').trim().toLowerCase()
-        const id = req.query.id
+        const { type, id } = req.body
 
         if (!(await validateRequestDevice(req, res))) return
 

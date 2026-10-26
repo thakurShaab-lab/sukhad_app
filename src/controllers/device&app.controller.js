@@ -3,10 +3,6 @@ const validationController = require('../models/device&app.model')
 const validateRequestDevice = async (req, res) => {
     const { app_id, device_id } = req.body || {}
 
-    console.log('Content-Type:', req.headers['content-type'])
-    console.log('Request body:', req.body)
-    console.log('Uploaded file:', req.file)
-
     if (
         (typeof app_id !== 'string' && typeof app_id !== 'number') ||
         !String(app_id).trim() ||

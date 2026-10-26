@@ -18,7 +18,7 @@ const noImagePath = `${BASE_URL}/no_image.png`
 
 const getCmsPages = async (req, res) => {
     try {
-        const page = req.query.page
+        const { page } = req.body
 
         if (!(await validateRequestDevice(req, res))) return
 
@@ -53,24 +53,22 @@ const getCmsPages = async (req, res) => {
         const pages =
             await cmsPageModel.findActivePagesByName(normalizedSearch)
 
-        const updatePages = await Promise.all(
-            pages.map(async (item) => ({
-                ...item,
-                pageDescription: item.pageDescription
-                    ? item.pageDescription.replace(
-                        /https?:\/\/localhost/gi,
-                        BASE_URL
-                    )
-                    : item.pageDescription,
-                pageImage: await resolveMediaUrl(
-                    req,
-                    'cms',
-                    item.pageImage,
-                    noImagePath,
+        const updatePages = {
+            ...pages,
+            pageDescription: pages.pageDescription
+                ? pages.pageDescription.replace(
+                    /https?:\/\/localhost/gi,
                     BASE_URL
                 )
-            }))
-        )
+                : pages.pageDescription,
+            pageImage: await resolveMediaUrl(
+                req,
+                'cms',
+                pages.pageImage,
+                noImagePath,
+                BASE_URL
+            )
+        }
 
         return res.status(200).json(convertNulls({
             success: true,
@@ -89,7 +87,7 @@ const getCmsPages = async (req, res) => {
 
 const getCmsPageById = async (req, res) => {
     try {
-        const { id } = req.query
+        const { id } = req.body
 
         if (!(await validateRequestDevice(req, res))) return
 
@@ -149,7 +147,7 @@ const getCmsPageById = async (req, res) => {
 
 const aboutUs = async (req, res) => {
     try {
-        const search = req.query.page || 'aboutus'
+        const { search } = req.body || 'aboutus'
 
         if (!(await validateRequestDevice(req, res))) return
 
@@ -178,7 +176,7 @@ const aboutUs = async (req, res) => {
 
         const response = {
             success: true,
-            aboutUs: {
+            data: {
                 ...result.aboutUs,
                 pageImage: await resolveMediaUrl(
                     req,
@@ -198,9 +196,6 @@ const aboutUs = async (req, res) => {
                         noImagePath,
                         BASE_URL
                     )
-
-                    console.log('Expertise filename:', item.expertiseImage)
-                    console.log('Expertise URL:', imageUrl)
 
                     return {
                         ...item,

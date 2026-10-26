@@ -4,11 +4,13 @@ const db = require('../config/drizzle')
 const { wlTestimonials } = require('../schema/wl-testimonials')
 
 const getTestimonials = async () => {
-    return await db
+    const testimonials = await db
         .select()
         .from(wlTestimonials)
         .where(eq(wlTestimonials.status, 1))
         .orderBy(desc(wlTestimonials.postedDate))
+
+    return testimonials
 }
 
 const createTestimonial = async (data) => {

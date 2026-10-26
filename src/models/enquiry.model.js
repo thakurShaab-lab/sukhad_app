@@ -5,8 +5,8 @@ const { wlEnquiry } = require('../schema/wl-enquiry')
 const { wlProducts } = require('../schema/wl-products')
 
 const productExists = async (productId) => {
-    const result = await db
-        .select({ productId: wlProducts.productId })
+    const [result] = await db
+        .select({ productId: wlProducts.productId, productTitle: wlProducts.productTitle })
         .from(wlProducts)
         .where(
             and(
@@ -16,7 +16,7 @@ const productExists = async (productId) => {
         )
         .limit(1)
 
-    return result.length > 0
+    return result
 }
 
 const createEnquiry = async (data) => {

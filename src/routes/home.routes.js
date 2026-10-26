@@ -4,6 +4,6 @@ const homePageController = require('../controllers/home.controller')
 
 const router = express.Router()
 
-router.post('/home', authTokenMiddleware, deviceAuthMiddleware, homePageController.getHomePage)
+router.post('/home', authTokenMiddleware, homePageController.getHomePage)
 
 module.exports = router

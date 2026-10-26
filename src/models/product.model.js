@@ -6,7 +6,7 @@ const { wlProductsMedia } = require('../schema/wl-products-media')
 const { wlCategories } = require('../schema/wl-categories')
 
 
-const category = alias(wlCategories, 'category') 
+const category = alias(wlCategories, 'category')
 const subCategory = alias(wlCategories, 'subcategory')
 
 const products = async ({
@@ -110,7 +110,7 @@ const products = async ({
             query = query.orderBy(...orderBy)
         }
 
-        return await query
+        return query
     } catch (error) {
         console.error('Error fetching products:', error)
         throw error

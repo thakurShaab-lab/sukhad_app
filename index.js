@@ -16,6 +16,7 @@ const productPageRoutes = require('./src/routes/product.routes')
 const enquiryPageRoutes = require('./src/routes/enquiry.routes')
 const galleryPageRoutes = require('./src/routes/gallery.routes')
 const testimonialsPageRoutes = require('./src/routes/testimonials.routes')
+const faqsPageRoutes = require('./src/routes/faqs.routes')
 
 
 const app = express()
@@ -113,6 +114,7 @@ app.use('/api/product-pages', productPageRoutes)
 app.use('/api/enquiry_pages', enquiryPageRoutes)
 app.use('/api/gallery_pages', galleryPageRoutes)
 app.use('/api/testimonials_pages', testimonialsPageRoutes)
+app.use('/api/faqs_pages', faqsPageRoutes)
 
 
 const server = app.listen(env.port, '127.0.0.1', () => {

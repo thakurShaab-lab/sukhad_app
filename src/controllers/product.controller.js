@@ -17,7 +17,7 @@ const products = async (req, res) => {
             car_model,
             ref_id,
             sort,
-        } = req.query
+        } = req.body
 
         if (!(await validateRequestDevice(req, res))) return
 
@@ -134,7 +134,7 @@ const products = async (req, res) => {
 
 const product = async (req, res) => {
     try {
-        const { productId } = req.query
+        const { productId } = req.body
 
         if (!(await validateRequestDevice(req, res))) return
 
@@ -206,7 +206,7 @@ const searchProduct = async (req, res) => {
             car_model,
             cat_id,
             sub_cat_id
-        } = req.query
+        } = req.body
 
         if (!(await validateRequestDevice(req, res))) return
 
