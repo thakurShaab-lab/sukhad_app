@@ -2,6 +2,7 @@ const homeModel = require('../models/home.model')
 const { resolveMediaUrl } = require('../utils/mediaUrl')
 const env = require('../config/env')
 const { convertNulls } = require('../utils/convertNulls')
+const { getMetalRates } = require('../utils/metalData')
 
 const getHomePage = async (req, res) => {
     try {
@@ -27,7 +28,7 @@ const getHomePage = async (req, res) => {
                 ...banner,
                 image_url: await resolveMediaUrl(
                     req,
-                    'banner',
+                    'thumb_cache',
                     banner.bannerImage,
                     noImagePath,
                     BASE_URL
@@ -80,10 +81,15 @@ const getHomePage = async (req, res) => {
             app_type: String(app_type).trim(),
         })
 
+        const metalRates = await getMetalRates()
+
         return res.status(200).json(convertNulls({
             success: true,
             message: 'Home page data retrieved successfully.',
-            data: homePageData,
+            data: {
+                metalRates,
+                ...homePageData,
+            }
         }))
     } catch (error) {
         res.status(200).json({ message: error.message, success: false })
