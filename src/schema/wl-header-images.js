@@ -4,7 +4,7 @@ const wlHeaderImages = mysqlTable("wl_header_images", {
 	id: int().autoincrement().notNull(),
 	headerImage: varchar("header_image", { length: 200 }).notNull(),
 	headerUrl: varchar("header_url", { length: 255 }),
-	headerUrl: int("button_type").default(0),
+	buttonType: int("button_type").default(0),
 	lineOne: varchar("line_one", { length: 100 }),
 	lineTwo: varchar("line_two", { length: 150 }),
 	lineThree: varchar("line_three", { length: 300 }),

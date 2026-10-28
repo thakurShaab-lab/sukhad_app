@@ -20,7 +20,12 @@ const getFaqs = async () => {
         .where(eq(wlFaq.status, 1))
         .orderBy(asc(wlFaq.sortOrder), asc(wlFaq.faqId))
 
-    return formatHtml(faqs)
+        console.log('FAQs DATA:', faqs)
+
+    return faqs.map((faq) => ({
+        ...faq,
+        faq_answer: formatHtml(faq.faq_answer)
+    }))
 }
 
 module.exports = {
