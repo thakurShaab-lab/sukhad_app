@@ -28,7 +28,7 @@ const getHomePage = async (req, res) => {
                 ...banner,
                 image_url: await resolveMediaUrl(
                     req,
-                    'thumb_cache',
+                    'header_images',
                     banner.bannerImage,
                     noImagePath,
                     BASE_URL

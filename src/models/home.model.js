@@ -4,6 +4,7 @@ const db = require('../config/drizzle')
 const { wlCustomers } = require('../schema/wl-customers')
 const { wlCategories } = require('../schema/wl-categories')
 const { wlBanners } = require('../schema/wl-banners')
+const {wlHeaderImages} = require('../schema/wl-header-images')
 const { wlPartners } = require('../schema/wl-partners')
 const { wlProducts } = require('../schema/wl-products')
 const { wlTestimonials } = require('../schema/wl-testimonials')
@@ -75,20 +76,15 @@ const getHomePageData = async () => {
 
         db
             .select({
-                bannerId: wlBanners.bannerId,
-                bannerType: wlBanners.bannerType,
-                bannerPosition: wlBanners.bannerPosition,
-                bannerImage: wlBanners.bannerImage,
-                bannerTitle: wlBanners.bannerTitle,
-                bannerUrl: wlBanners.bannerUrl,
-                bannerPage: wlBanners.bannerPage,
-                description: wlBanners.description,
-                refCategoryId: wlBanners.refCategoryId,
-                refProdType: wlBanners.refProdType,
-                refItemId: wlBanners.refItemId,
+                bannerId: wlHeaderImages.id,
+                bannerImage: wlHeaderImages.headerImage,
+                bannerUrl: wlHeaderImages.headerUrl,
+                lineOne: wlHeaderImages.lineOne,
+                lineTwo: wlHeaderImages.lineTwo,
+                lineThree: wlHeaderImages.lineThree,
             })
-            .from(wlBanners)
-            .where(eq(wlBanners.status, 1)),
+            .from(wlHeaderImages)
+            .where(eq(wlHeaderImages.status, '1')),
 
         db
             .select({
