@@ -110,6 +110,8 @@ const products = async ({
             query = query.orderBy(...orderBy)
         }
 
+        console.log('Query:', query)
+
         return query
     } catch (error) {
         console.error('Error fetching products:', error)

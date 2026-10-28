@@ -2,6 +2,7 @@ const productModel = require('../models/product.model')
 const { resolveMediaUrl } = require('../utils/mediaUrl')
 const env = require('../config/env')
 const { convertNulls } = require('../utils/convertNulls')
+const { formatHtml } = require('../utils/formatHtml')
 const { validateRequestDevice } = require('./device&app.controller')
 
 const BASE_URL = env.staticFileBaseUrl.replace(/\/+$/, '')
@@ -100,6 +101,7 @@ const products = async (req, res) => {
         const updatedProducts = await Promise.all(
             productList.map(async (product) => ({
                 ...product,
+                productDescription: formatHtml(product.productDescription),
                 productImage: await resolveMediaUrl(
                     req,
                     'products',
@@ -186,6 +188,7 @@ const product = async (req, res) => {
 
         const updatedProduct = {
             ...productData,
+            productDescription: formatHtml(productData.productDescription),
             productImage: productImages
         }
 

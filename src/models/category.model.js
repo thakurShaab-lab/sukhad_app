@@ -1,6 +1,7 @@
 const { eq, and, sql } = require('drizzle-orm')
 const db = require('../config/drizzle')
 const { wlCategories } = require('../schema/wl-categories')
+const { formatHtml } = require('../utils/formatHtml')
 
 const categories = async () => {
     const categories = await db.select()
@@ -10,6 +11,7 @@ const categories = async () => {
 
     const result = categories.map((category) => ({
         ...category,
+        
         subCategories: categories.filter(
             (subCategory) =>
                 Number(subCategory.parentId) ===
@@ -22,14 +24,26 @@ const categories = async () => {
 
 const subCategory = async (categoryId) => {
     const categories = await db.select()
-    .from(wlCategories)
-    .where(and(
-        eq(wlCategories.parentId, categoryId),
-        eq(wlCategories.status, '1')
-    ))
-    .orderBy(wlCategories.sortOrder)
+        .from(wlCategories)
+        .where(and(
+            eq(wlCategories.parentId, categoryId),
+            eq(wlCategories.status, '1')
+        ))
+        .orderBy(wlCategories.sortOrder)
 
     return categories
 }
 
-module.exports = { categories, subCategory }
+const categoryById = async (categoryId) => {
+    const [category] = await db.select()
+        .from(wlCategories)
+        .where(and(
+            eq(wlCategories.categoryId, categoryId),
+            eq(wlCategories.status, '1')
+        ))
+        .limit(1)
+
+    return category
+}
+
+module.exports = { categories, subCategory, categoryById }
