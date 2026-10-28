@@ -79,6 +79,7 @@ const getHomePageData = async () => {
                 bannerId: wlHeaderImages.id,
                 bannerImage: wlHeaderImages.headerImage,
                 bannerUrl: wlHeaderImages.headerUrl,
+                buttonType: wlHeaderImages.buttonType,
                 lineOne: wlHeaderImages.lineOne,
                 lineTwo: wlHeaderImages.lineTwo,
                 lineThree: wlHeaderImages.lineThree,

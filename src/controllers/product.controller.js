@@ -8,8 +8,11 @@ const BASE_URL = env.staticFileBaseUrl.replace(/\/+$/, '')
 const noImagePath = `${BASE_URL}/no_image.png`
 
 
+
 const products = async (req, res) => {
     try {
+        if (!(await validateRequestDevice(req, res))) return
+
         const {
             cat_id,
             sub_cat_id,
@@ -19,9 +22,17 @@ const products = async (req, res) => {
             sort,
         } = req.body
 
-        if (!(await validateRequestDevice(req, res))) return
+
+        const normalizeOptional = (value) => {
+            if (value === undefined || value === null || value === '') {
+                return undefined
+            }
+            return value
+        }
 
         const parseId = (value, field) => {
+            value = normalizeOptional(value)
+
             if (value === undefined) return undefined
 
             if (
@@ -35,13 +46,9 @@ const products = async (req, res) => {
             return Number(value)
         }
 
-        const categoryId = parseId(cat_id, 'cat_id')
-        const subCategoryId = parseId(
-            sub_cat_id,
-            'sub_cat_id'
-        )
-
         const parseText = (value, field) => {
+            value = normalizeOptional(value)
+
             if (value === undefined) return undefined
 
             if (
@@ -55,24 +62,18 @@ const products = async (req, res) => {
             return value.trim()
         }
 
-        const productMake = parseText(
-            prod_make,
-            'prod_make'
-        )
+        const categoryId = parseId(cat_id, 'cat_id')
+        const subCategoryId = parseId(sub_cat_id, 'sub_cat_id')
 
-        const carModel = parseText(
-            car_model,
-            'car_model'
-        )
+        const productMake = parseText(prod_make, 'prod_make')
+        const carModel = parseText(car_model, 'car_model')
+        const carRefId = parseText(ref_id, 'ref_id')
 
-        const carRefId = parseText(
-            ref_id,
-            'ref_id'
-        )
+        const normalizedSort = normalizeOptional(sort)
 
         if (
-            sort !== undefined &&
-            !['az', 'za'].includes(sort)
+            normalizedSort !== undefined &&
+            !['az', 'za'].includes(normalizedSort)
         ) {
             return res.status(400).json({
                 success: false,
@@ -86,7 +87,7 @@ const products = async (req, res) => {
             prod_make: productMake,
             car_model: carModel,
             ref_id: carRefId,
-            sort,
+            sort: normalizedSort,
         })
 
         if (!productList.length) {
@@ -117,18 +118,22 @@ const products = async (req, res) => {
         )
     } catch (error) {
         if (error.message.startsWith('Invalid ')) {
-            return res.status(400).json(convertNulls({
-                success: false,
-                message: error.message,
-            }))
+            return res.status(400).json(
+                convertNulls({
+                    success: false,
+                    message: error.message,
+                })
+            )
         }
 
         console.error('Products API error:', error)
 
-        return res.status(500).json(convertNulls({
-            success: false,
-            message: 'Unable to fetch products',
-        }))
+        return res.status(500).json(
+            convertNulls({
+                success: false,
+                message: 'Unable to fetch products',
+            })
+        )
     }
 }
 
@@ -200,6 +205,9 @@ const product = async (req, res) => {
 
 const searchProduct = async (req, res) => {
     try {
+        
+        if (!(await validateRequestDevice(req, res))) return
+        
         const {
             ref_id,
             prod_code,
@@ -207,8 +215,6 @@ const searchProduct = async (req, res) => {
             cat_id,
             sub_cat_id
         } = req.body
-
-        if (!(await validateRequestDevice(req, res))) return
 
         for (const [key, value] of [
             ['cat_id', cat_id],

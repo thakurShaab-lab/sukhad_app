@@ -54,6 +54,8 @@ const createTestimonial = async (req, res) => {
     let savedFilePath
 
     try {
+        if (!(await validateRequestDevice(req, res))) return
+
         const {
             testimonial_title,
             poster_name,
@@ -62,9 +64,6 @@ const createTestimonial = async (req, res) => {
             company,
             testimonial_description
         } = req.body || {}
-
-
-        if (!(await validateRequestDevice(req, res))) return
 
         if (
             friendly_url !== undefined &&

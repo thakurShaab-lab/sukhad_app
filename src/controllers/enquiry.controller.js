@@ -4,6 +4,8 @@ const { validateRequestDevice } = require('./device&app.controller')
 
 const postEnquiry = async (req, res) => {
     try {
+        if (!(await validateRequestDevice(req, res))) return
+
         const {
             type,
             product_id,
@@ -13,8 +15,6 @@ const postEnquiry = async (req, res) => {
             enquiry,
             email
         } = req.body || {}
-
-        if (!(await validateRequestDevice(req, res))) return
 
         let enquiryType
 

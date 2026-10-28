@@ -6,6 +6,7 @@ const { validateRequestDevice } = require('./device&app.controller')
 const categories = async (req, res) => {
     try {
         if (!(await validateRequestDevice(req, res))) return
+        
         const categories = await categoryPageModel.categories()
 
         if (!categories) {
@@ -21,9 +22,9 @@ const categories = async (req, res) => {
 
 const subCategory = async (req, res) => {
     try {
-        const { categoryId } = req.body
-
         if (!(await validateRequestDevice(req, res))) return
+
+        const { categoryId } = req.body
 
         if (!categoryId) {
             return res.status(200).json({ success: false, message: 'Category ID is required' })

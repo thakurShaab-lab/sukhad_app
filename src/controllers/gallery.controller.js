@@ -11,9 +11,9 @@ const noImagePath = `${BASE_URL}/no_image.png`
 
 const gallery = async (req, res) => {
     try {
-        const { type, id } = req.body
-
         if (!(await validateRequestDevice(req, res))) return
+
+        const { type, id } = req.body
 
         if (!['images', 'videos'].includes(type)) {
             return res.status(400).json({

@@ -26,6 +26,26 @@ const METAL_SYMBOLS = (
   .map((symbol) => symbol.trim())
   .filter(Boolean);
 
+const SHORT_TTL_MS = 60 * 1000
+const LONG_TTL_MS = 24 * 60 * 60 * 1000
+const cache = new Map()
+
+const cached = (key, ttlMs, loader) => {
+  const now = Date.now()
+  const hit = cache.get(key)
+  if (hit && hit.expiresAt > now) return hit.promise
+
+  for (const [k, v] of cache) {
+    if (v.expiresAt <= now) cache.delete(k)
+  }
+
+  const promise = loader().catch((error) => {
+    cache.delete(key)
+    throw error
+  })
+  cache.set(key, { promise, expiresAt: now + ttlMs })
+  return promise
+}
 
 const getMonthlyStats = async (symbol, latestPrice) => {
   const endDate = new Date()
@@ -127,18 +147,23 @@ const METAL_NAME_TO_SYMBOL = {
   platinum: 'XPT'
 }
 
+const fetchSymbols = () =>
+  cached('symbols', LONG_TTL_MS, async () => {
+    const res = await fetch(
+      `${BASE_URL}/symbols?access_key=${API_KEY}`
+    )
+
+    const json = await res.json()
+
+    if (!res.ok) {
+      throw new Error(`Symbols API failed with HTTP ${res.status}`)
+    }
+
+    return json.symbols ?? json
+  })
+
 const getMetals = async (requestedNames) => {
-  const res = await fetch(
-    `${BASE_URL}/symbols?access_key=${API_KEY}`
-  )
-
-  const json = await res.json()
-
-  if (!res.ok) {
-    throw new Error(`Symbols API failed with HTTP ${res.status}`)
-  }
-
-  const symbolsData = json.symbols ?? json
+  const symbolsData = await fetchSymbols()
 
   if (
     !symbolsData ||
@@ -147,14 +172,6 @@ const getMetals = async (requestedNames) => {
   ) {
     throw new Error('Invalid symbols API response')
   }
-
-  // const inputs = (
-  //   Array.isArray(requestedNames) && requestedNames.length > 0
-  //     ? requestedNames
-  //     : METAL_SYMBOLS
-  // )
-  //   .map((value) => String(value).trim())
-  //   .filter(Boolean)
 
 const inputs =
   typeof requestedNames === 'string' && requestedNames.trim()
@@ -191,19 +208,25 @@ const inputs =
   })
 }
 
-const fetchRates = async (endpoint, symbols) => {
-  const params = new URLSearchParams({
-    access_key: API_KEY,
-    base: 'INR',
-    symbols: symbols.join(','),
-  })
+const fetchRates = (endpoint, symbols) => {
+  const today = new Date().toISOString().slice(0, 10)
+  const ttlMs =
+    endpoint === 'latest' || endpoint === today ? SHORT_TTL_MS : LONG_TTL_MS
 
-  const res = await fetch(`${BASE_URL}/${endpoint}?${params}`)
-  const json = await res.json()
-  if (!json.success) {
-    throw new Error(json.error?.info || 'Metals API request failed')
-  }
-  return json.rates
+  return cached(`${endpoint}:${symbols.join(',')}`, ttlMs, async () => {
+    const params = new URLSearchParams({
+      access_key: API_KEY,
+      base: 'INR',
+      symbols: symbols.join(','),
+    })
+
+    const res = await fetch(`${BASE_URL}/${endpoint}?${params}`)
+    const json = await res.json()
+    if (!json.success) {
+      throw new Error(json.error?.info || 'Metals API request failed')
+    }
+    return json.rates
+  })
 }
 
 const buildMetalRates = async (requestedNames) => {

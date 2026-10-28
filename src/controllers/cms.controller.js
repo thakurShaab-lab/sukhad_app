@@ -18,9 +18,9 @@ const noImagePath = `${BASE_URL}/no_image.png`
 
 const getCmsPages = async (req, res) => {
     try {
-        const { page } = req.body
-
         if (!(await validateRequestDevice(req, res))) return
+
+        const { page } = req.body
 
         if (
             typeof page !== 'string' ||
@@ -87,9 +87,9 @@ const getCmsPages = async (req, res) => {
 
 const getCmsPageById = async (req, res) => {
     try {
-        const { id } = req.body
-
         if (!(await validateRequestDevice(req, res))) return
+
+        const { id } = req.body
 
         if (
             !/^[1-9]\d*$/.test(id) ||
@@ -147,9 +147,9 @@ const getCmsPageById = async (req, res) => {
 
 const aboutUs = async (req, res) => {
     try {
-        const { search } = req.body || 'aboutus'
-
         if (!(await validateRequestDevice(req, res))) return
+
+        const { search } = req.body || 'aboutus'
 
         if (
             typeof search !== 'string' ||
