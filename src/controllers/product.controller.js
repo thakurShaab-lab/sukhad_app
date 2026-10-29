@@ -31,22 +31,6 @@ const products = async (req, res) => {
             return value
         }
 
-        const parseId = (value, field) => {
-            value = normalizeOptional(value)
-
-            if (value === undefined) return undefined
-
-            if (
-                typeof value !== 'string' ||
-                !/^[1-9]\d*$/.test(value) ||
-                !Number.isSafeInteger(Number(value))
-            ) {
-                throw new Error(`Invalid ${field}`)
-            }
-
-            return Number(value)
-        }
-
         const parseText = (value, field) => {
             value = normalizeOptional(value)
 
@@ -63,11 +47,26 @@ const products = async (req, res) => {
             return value.trim()
         }
 
-        const categoryId = parseId(cat_id, 'cat_id')
-        const subCategoryId = parseId(sub_cat_id, 'sub_cat_id')
+        // "1,2" style id lists (category ids, or product ids picked from the carMakes / carModels lists)
+        const parseIdList = (value, field) => {
+            value = normalizeOptional(value)
 
-        const productMake = parseText(prod_make, 'prod_make')
-        const carModel = parseText(car_model, 'car_model')
+            if (value === undefined) return undefined
+
+            const ids = String(value).split(',').map((id) => id.trim()).filter(Boolean)
+
+            if (!ids.length || !ids.every((id) => /^[1-9]\d*$/.test(id) && Number.isSafeInteger(Number(id)))) {
+                throw new Error(`Invalid ${field}`)
+            }
+
+            return [...new Set(ids.map(Number))]
+        }
+
+        const categoryId = parseIdList(cat_id, 'cat_id')
+        const subCategoryId = parseIdList(sub_cat_id, 'sub_cat_id')
+
+        const productMake = parseIdList(prod_make, 'prod_make')
+        const carModel = parseIdList(car_model, 'car_model')
         const carRefId = parseText(ref_id, 'ref_id')
 
         const normalizedSort = normalizeOptional(sort)

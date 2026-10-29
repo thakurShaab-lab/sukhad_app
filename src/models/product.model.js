@@ -1,4 +1,4 @@
-const { eq, and, sql, or, like, asc, desc } = require('drizzle-orm')
+const { eq, and, sql, or, like, asc, desc, inArray } = require('drizzle-orm')
 const { alias } = require('drizzle-orm/mysql-core')
 const db = require('../config/drizzle')
 const { wlProducts } = require('../schema/wl-products')
@@ -22,30 +22,33 @@ const products = async ({
             eq(wlProducts.status, '1'),
         ]
 
-        if (cat_id !== undefined && cat_id !== null) {
+        // category_links holds the product's full chain (e.g. "2,1" = sub category 2 of category 1)
+        const linkedToAny = (ids) => or(
+            inArray(wlProducts.categoryId, ids),
+            ...ids.map((id) =>
+                sql`FIND_IN_SET(${String(id)}, ${wlProducts.categoryLinks}) > 0`
+            )
+        )
+
+        // cat_id / sub_cat_id are id lists: any of the categories AND any of the sub categories
+        if (cat_id?.length) {
+            conditions.push(linkedToAny(cat_id))
+        }
+
+        if (sub_cat_id?.length) {
+            conditions.push(linkedToAny(sub_cat_id))
+        }
+
+        // prod_make / car_model are product id lists from the carMakes / carModels arrays
+        if (prod_make?.length) {
             conditions.push(
-                eq(wlProducts.categoryId, cat_id)
+                inArray(wlProducts.productId, prod_make)
             )
         }
 
-        if (sub_cat_id !== undefined && sub_cat_id !== null) {
+        if (car_model?.length) {
             conditions.push(
-                sql`FIND_IN_SET(
-                    ${String(sub_cat_id)},
-                    ${wlProducts.categoryLinks}
-                ) > 0`
-            )
-        }
-
-        if (prod_make !== undefined && prod_make !== null) {
-            conditions.push(
-                eq(wlProducts.productMake, prod_make)
-            )
-        }
-
-        if (car_model !== undefined && car_model !== null) {
-            conditions.push(
-                eq(wlProducts.productModel, car_model)
+                inArray(wlProducts.productId, car_model)
             )
         }
 
@@ -109,8 +112,6 @@ const products = async ({
         if (orderBy.length > 0) {
             query = query.orderBy(...orderBy)
         }
-
-        console.log('Query:', query)
 
         return query
     } catch (error) {
@@ -271,6 +272,5 @@ const searchProduct = async ({
 
     return result
 }
-
 
 module.exports = { products, product, searchProduct }
