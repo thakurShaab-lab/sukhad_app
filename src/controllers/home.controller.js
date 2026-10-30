@@ -26,6 +26,11 @@ const getHomePage = async (req, res) => {
         homePageData.banners = await Promise.all(
             homePageData.banners.map(async (banner) => ({
                 ...banner,
+                buttonType: {
+                    1: 'Enquire now',
+                    2: 'Our services',
+                    3: 'Check rates',
+                }[banner.buttonType] || '',
                 image_url: await resolveMediaUrl(
                     req,
                     'header_images',
