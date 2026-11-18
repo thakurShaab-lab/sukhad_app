@@ -4,6 +4,7 @@ const env = require('../config/env')
 const { convertNulls } = require('../utils/convertNulls')
 const { formatHtml } = require('../utils/formatHtml')
 const { validateRequestDevice } = require('./device&app.controller')
+const { getProductPricingSettings, calculateProductPrice } = require('../utils/metalPricing')
 
 const BASE_URL = env.staticFileBaseUrl.replace(/\/+$/, '')
 const noImagePath = `${BASE_URL}/no_image.png`
@@ -97,9 +98,13 @@ const products = async (req, res) => {
             })
         }
 
+        // same pricing settings / metal rates for every product in the list
+        const pricingSettings = await getProductPricingSettings()
+
         const updatedProducts = await Promise.all(
             productList.map(async (product) => ({
                 ...product,
+                ...calculateProductPrice(product, pricingSettings),
                 productDescription: formatHtml(product.productDescription),
                 productImage: await resolveMediaUrl(
                     req,
@@ -185,8 +190,11 @@ const product = async (req, res) => {
             )
         }
 
+        const pricingSettings = await getProductPricingSettings()
+
         const updatedProduct = {
             ...productData,
+            ...calculateProductPrice(productData, pricingSettings),
             productDescription: formatHtml(productData.productDescription),
             productImage: productImages
         }

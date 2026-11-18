@@ -47,7 +47,7 @@ const cached = (key, ttlMs, loader) => {
   return promise
 }
 
-const getMonthlyStats = async (symbol, latestPrice) => {
+const getMonthlyStats = async (symbol, latestPrice, base = 'INR') => {
   const endDate = new Date()
   const startDate = new Date(endDate)
   startDate.setMonth(startDate.getMonth() - 1)
@@ -65,9 +65,9 @@ const getMonthlyStats = async (symbol, latestPrice) => {
   const results = await Promise.all(
     dates.map(async (date) => {
       try {
-        const rates = await fetchRates(date, [symbol])
+        const rates = await fetchRates(date, [symbol], base)
 
-        const price = inrPerOunce(rates, symbol)
+        const price = pricePerOunce(rates, symbol, base)
 
         if (!Number.isFinite(price) || price <= 0) {
           return null
@@ -127,18 +127,22 @@ const getMonthlyStats = async (symbol, latestPrice) => {
 
 const round2 = (n) => Math.round(n * 100) / 100
 
-const inrPerOunce = (rates, symbol) => {
+// metals-api returns either a direct "<BASE><SYMBOL>" price (e.g. USDXPT),
+// an inverted rate (metal units per 1 base unit, always < 1 for precious
+// metals), or occasionally the price itself. Normalise to base per troy oz.
+const pricePerOunce = (rates, symbol, base = 'INR') => {
+  const direct = rates[`${base}${symbol}`]
+  if (Number.isFinite(direct) && direct > 0) {
+    return direct
+  }
+
   const rate = rates[symbol]
 
   if (!Number.isFinite(rate) || rate <= 0) {
     throw new Error(`Invalid or missing rate for ${symbol}`)
   }
 
-  if (rate < 0.001) {
-    return 1 / rate
-  }
-
-  return rate
+  return rate < 1 ? 1 / rate : rate
 }
 
 const METAL_NAME_TO_SYMBOL = {
@@ -208,15 +212,15 @@ const inputs =
   })
 }
 
-const fetchRates = (endpoint, symbols) => {
+const fetchRates = (endpoint, symbols, base = 'INR') => {
   const today = new Date().toISOString().slice(0, 10)
   const ttlMs =
     endpoint === 'latest' || endpoint === today ? SHORT_TTL_MS : LONG_TTL_MS
 
-  return cached(`${endpoint}:${symbols.join(',')}`, ttlMs, async () => {
+  return cached(`${base}:${endpoint}:${symbols.join(',')}`, ttlMs, async () => {
     const params = new URLSearchParams({
       access_key: API_KEY,
-      base: 'INR',
+      base,
       symbols: symbols.join(','),
     })
 
@@ -229,7 +233,7 @@ const fetchRates = (endpoint, symbols) => {
   })
 }
 
-const buildMetalRates = async (requestedNames) => {
+const buildMetalRates = async (requestedNames, base = 'INR') => {
   const metals = await getMetals(requestedNames)
   const symbols = metals.map((m) => m.symbol)
 
@@ -238,20 +242,20 @@ const buildMetalRates = async (requestedNames) => {
     .slice(0, 10)
 
   const [latest, previous] = await Promise.all([
-    fetchRates('latest', symbols),
-    fetchRates(yesterday, symbols),
+    fetchRates('latest', symbols, base),
+    fetchRates(yesterday, symbols, base),
   ])
 
   return Promise.all(
     metals.map(async (m) => {
-      const price = inrPerOunce(latest, m.symbol)
-      const prevPrice = inrPerOunce(previous, m.symbol)
+      const price = pricePerOunce(latest, m.symbol, base)
+      const prevPrice = pricePerOunce(previous, m.symbol, base)
 
       const change = price - prevPrice
       const changePercent =
         prevPrice > 0 ? (change / prevPrice) * 100 : null
 
-      const monthly = await getMonthlyStats(m.symbol, price)
+      const monthly = await getMonthlyStats(m.symbol, price, base)
 
       return {
         ...m,
@@ -270,13 +274,14 @@ const buildMetalRates = async (requestedNames) => {
   )
 }
 
-const getMetalRates = async (requestedNames) => {
-  const metals = await buildMetalRates(requestedNames)
+const getMetalRates = async (requestedNames, currency = 'INR') => {
+  const base = String(currency).toUpperCase()
+  const metals = await buildMetalRates(requestedNames, base)
 
   return {
     title: 'Live Precious Metal Rates.',
-    subtitle: 'INR/Troy Ounce - Updated from Metal API.',
-    currency: 'INR',
+    subtitle: `${base}/Troy Ounce - Updated from Metal API.`,
+    currency: base,
     unit: 'troy oz',
     source: 'Metal API',
     updatedAt: new Date().toISOString(),
@@ -284,4 +289,14 @@ const getMetalRates = async (requestedNames) => {
   }
 }
 
-module.exports = { getMetalRates }
+// latest price per troy ounce only (no daily / monthly history), e.g. { XPT: 137547.93, ... }
+const getLatestMetalPrices = async (symbols, currency = 'INR') => {
+  const base = String(currency).toUpperCase()
+  const latest = await fetchRates('latest', symbols, base)
+
+  return Object.fromEntries(
+    symbols.map((symbol) => [symbol, pricePerOunce(latest, symbol, base)])
+  )
+}
+
+module.exports = { getMetalRates, getLatestMetalPrices }

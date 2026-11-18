@@ -22,12 +22,14 @@ const gallery = async (req, res) => {
             })
         }
 
-        if (id === undefined) {
+        if (id === undefined || id === null || id === '') {
             const albums = await galleryModel.getAlbums(type)
 
             const categories = await Promise.all(
                 albums.map(async (album) => ({
                     ...album,
+                    mediaCount: albums.length,
+                    albumId: album.albumId,
                     albumImage: await resolveMediaUrl(
                         req,
                         'albums',

@@ -21,6 +21,7 @@ module.exports = {
   ...require("./wl-header-images"),
   ...require("./wl-invite-friends"),
   ...require("./wl-meta-tags"),
+  ...require("./wl-metal-calculator"),
   ...require("./wl-notification"),
   ...require("./wl-notification-customer"),
   ...require("./wl-partners"),

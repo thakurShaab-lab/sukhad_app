@@ -9,7 +9,12 @@ const wlProducts = mysqlTable("wl_products", {
 	referenceId: varchar("reference_id", { length: 255 }),
 	productMake: varchar("product_make", { length: 150 }),
 	productModel: varchar("product_model", { length: 100 }),
-	year: varchar({ length: 100 }),
+	partNumber: varchar("part_number", { length: 255 }),
+	prodWeight: varchar("prod_weight", { length: 50 }),
+	prodPt: varchar("prod_pt", { length: 11 }),
+	prodPd: varchar("prod_pd", { length: 11 }),
+	prodPh: varchar("prod_ph", { length: 11 }),
+	year: varchar("year", { length: 100 }),
 	friendlyUrl: varchar("friendly_url", { length: 110 }),
 	productAlt: varchar("product_alt", { length: 100 }),
 	productDescription: text("product_description").notNull(),
@@ -20,13 +25,13 @@ const wlProducts = mysqlTable("wl_products", {
 	isFeatured: tinyint("is_featured").default(0).notNull(),
 	isRecent: tinyint("is_recent").default(0).notNull(),
 	productType: tinyint("product_type").default(0).notNull(),
-	xlsType: mysqlEnum("xls_type", ['0','1']).default('0').notNull(),
+	xlsType: mysqlEnum("xls_type", ['0', '1']).default('0').notNull(),
 	status: tinyint().default(1).notNull(),
-	addedDate: datetime("added_date", { mode: 'string'}).notNull(),
-	updatedDate: datetime("updated_date", { mode: 'string'}),
+	addedDate: datetime("added_date", { mode: 'string' }).notNull(),
+	updatedDate: datetime("updated_date", { mode: 'string' }),
 },
-(table) => [
-	primaryKey({ columns: [table.productId], name: "wl_products_product_id"}),
-])
+	(table) => [
+		primaryKey({ columns: [table.productId], name: "wl_products_product_id" }),
+	])
 
 module.exports = { wlProducts }
