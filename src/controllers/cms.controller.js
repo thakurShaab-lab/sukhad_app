@@ -149,12 +149,12 @@ const aboutUs = async (req, res) => {
     try {
         if (!(await validateRequestDevice(req, res))) return
 
-        const { search } = req.body || 'aboutus'
+        const { page } = req.body || 'aboutus'
 
         if (
-            typeof search !== 'string' ||
-            !search.trim() ||
-            search.length > 50
+            typeof page !== 'string' ||
+            !page.trim() ||
+            page.length > 50
         ) {
             return res.status(400).json({
                 success: false,
@@ -162,7 +162,7 @@ const aboutUs = async (req, res) => {
             })
         }
 
-        const normalizedSearch = normalizePageName(search.trim())
+        const normalizedSearch = normalizePageName(page.trim())
         const result = await cmsPageModel.aboutUs(normalizedSearch)
 
         if (!result.aboutUs) {
