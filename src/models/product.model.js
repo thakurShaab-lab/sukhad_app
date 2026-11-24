@@ -42,13 +42,13 @@ const products = async ({
         // prod_make / car_model are product id lists from the carMakes / carModels arrays
         if (prod_make?.length) {
             conditions.push(
-                inArray(wlProducts.productId, prod_make)
+                like(wlProducts.productMake, `%${prod_make}%`)
             )
         }
 
         if (car_model?.length) {
             conditions.push(
-                inArray(wlProducts.productId, car_model)
+                like(wlProducts.productModel, `%${car_model}%`)
             )
         }
 

@@ -66,8 +66,8 @@ const products = async (req, res) => {
         const categoryId = parseIdList(cat_id, 'cat_id')
         const subCategoryId = parseIdList(sub_cat_id, 'sub_cat_id')
 
-        const productMake = parseIdList(prod_make, 'prod_make')
-        const carModel = parseIdList(car_model, 'car_model')
+        const productMake = parseText(prod_make, 'prod_make')
+        const carModel = parseText(car_model, 'car_model')
         const carRefId = parseText(ref_id, 'ref_id')
 
         const normalizedSort = normalizeOptional(sort)
@@ -215,9 +215,9 @@ const product = async (req, res) => {
 
 const searchProduct = async (req, res) => {
     try {
-        
+
         if (!(await validateRequestDevice(req, res))) return
-        
+
         const {
             ref_id,
             prod_code,

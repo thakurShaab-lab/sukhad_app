@@ -30,14 +30,7 @@ const postEnquiry = async (req, res) => {
         }
 
         const hasProductId =
-            product_id !== undefined && product_id !== null && product_id !== ''
-
-        if (enquiryType === 1 && !hasProductId) {
-            return res.status(200).json({
-                success: false,
-                message: 'Product ID is required'
-            })
-        }
+            product_id !== undefined && product_id !== null && product_id !== '' && Number(product_id) >= 0
 
         let productId
         let product_name
@@ -66,9 +59,9 @@ const postEnquiry = async (req, res) => {
                     success: false,
                     message: 'Product not found'
                 })
-            } else {
-                product_name = exists.productTitle
             }
+
+            product_name = exists.productTitle
         }
 
         let entityTitle

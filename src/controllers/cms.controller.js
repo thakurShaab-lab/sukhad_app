@@ -3,7 +3,7 @@ const { resolveMediaUrl } = require('../utils/mediaUrl')
 const env = require('../config/env')
 const { convertNulls } = require('../utils/convertNulls')
 const { validateRequestDevice } = require('./device&app.controller')
-
+const {formatHtml} = require('../utils/formatHtml')
 
 const normalizePageName = (value) => {
     return value
@@ -178,6 +178,7 @@ const aboutUs = async (req, res) => {
             success: true,
             data: {
                 ...result.aboutUs,
+                pageDescription: formatHtml(result.aboutUs.pageDescription),
                 pageImage: await resolveMediaUrl(
                     req,
                     'cms',
