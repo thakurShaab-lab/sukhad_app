@@ -2,22 +2,27 @@ const { eq, and, or, sql, asc, inArray } = require('drizzle-orm')
 const db = require('../config/drizzle')
 const { wlCategories } = require('../schema/wl-categories')
 const { wlProducts } = require('../schema/wl-products')
-const { formatHtml } = require('../utils/formatHtml')
 
 const categories = async () => {
-    const categories = await db.select()
+
+    const allCategories = await db.select()
         .from(wlCategories)
         .where(eq(wlCategories.status, '1'))
         .orderBy(wlCategories.sortOrder)
 
-    const result = categories.map((category) => ({
+    // Get only parent categories
+    const parentCategories = allCategories.filter(
+        category => Number(category.parentId) === 0
+    )
+
+    // Attach subcategories to their respective parents
+    const result = parentCategories.map(category => ({
         ...category,
-        
-        subCategories: categories.filter(
-            (subCategory) =>
-                Number(subCategory.parentId) ===
-                Number(category.categoryId)
-        ),
+
+        subCategories: allCategories.filter(
+            subCategory =>
+                Number(subCategory.parentId) === Number(category.categoryId)
+        )
     }))
 
     return result

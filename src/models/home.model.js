@@ -3,7 +3,7 @@ const { eq, and, asc } = require('drizzle-orm')
 const db = require('../config/drizzle')
 const { wlCustomers } = require('../schema/wl-customers')
 const { wlCategories } = require('../schema/wl-categories')
-const {wlHeaderImages} = require('../schema/wl-header-images')
+const { wlHeaderImages } = require('../schema/wl-header-images')
 const { wlPartners } = require('../schema/wl-partners')
 const { wlProducts } = require('../schema/wl-products')
 const { wlTestimonials } = require('../schema/wl-testimonials')
@@ -112,6 +112,10 @@ const getHomePageData = async () => {
                 referenceId: wlProducts.referenceId,
                 productMake: wlProducts.productMake,
                 productModel: wlProducts.productModel,
+                prodWeight: wlProducts.prodWeight,
+                prodPt: wlProducts.prodPt,
+                prodPd: wlProducts.prodPd,
+                prodPh: wlProducts.prodPh,
                 year: wlProducts.year,
                 friendlyUrl: wlProducts.friendlyUrl,
                 productAlt: wlProducts.productAlt,
@@ -159,13 +163,19 @@ const getHomePageData = async () => {
     ])
 
 
-    const categories = allCategories.map((category) => ({
+    const parentCategories = allCategories.filter(
+        category => Number(category.parentId) === 0
+    )
+
+    const categories = parentCategories.map(category => ({
         ...category,
+
         subcategories: allCategories.filter(
-            (subcategory) =>
-                Number(subcategory.parentId) === Number(category.categoryId)
-        ),
+            subCategory =>
+                Number(subCategory.parentId) === Number(category.categoryId)
+        )
     }))
+
 
 
     return {

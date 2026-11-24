@@ -1,22 +1,3 @@
-/**
- * Common metal pricing logic (INR).
- *
- * Used by:
- *  - POST /metal_stats_pages/metal-price-calculator  (values from req.body)
- *  - POST /product-pages/list and /product-pages/detail (values from wl_products:
- *    prod_weight = kg, prod_pt / prod_pd / prod_ph = Pt / Pd / Rh PPM)
- *
- * Formula, per metal:
- *   payable PPM        = max(PPM - minimum deduction, 0)
- *   payable metal (kg) = weight (kg) x payable PPM / 1,000,000 x return rate %
- *   gross value        = payable metal (kg) x price per kg
- *   refining charge    = payable metal (kg) x refining charge per kg
- *   value              = gross value - refining charge
- * Totals:
- *   treatment fee  = weight (in the settings weight unit) x treatment fee
- *   finance charge = gross value x interest rate % x days out / 365
- *   total value    = gross value - refining charges - treatment fee - finance charge
- */
 const { getLatestMetalPrices } = require('./metalData')
 const metalCalculatorModel = require('../models/metalCalculator.model')
 

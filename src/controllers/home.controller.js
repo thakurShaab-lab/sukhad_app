@@ -3,6 +3,7 @@ const { resolveMediaUrl } = require('../utils/mediaUrl')
 const env = require('../config/env')
 const { convertNulls } = require('../utils/convertNulls')
 const { getMetalRates } = require('../utils/metalData')
+const { getProductPricingSettings, calculateProductPrice } = require('../utils/metalPricing')
 
 const getHomePage = async (req, res) => {
     try {
@@ -20,6 +21,8 @@ const getHomePage = async (req, res) => {
         const BASE_URL = env.staticFileBaseUrl.replace(/\/+$/, '')
 
         const noImagePath = `${BASE_URL}/no_image.png`
+
+        const pricingSettings = await getProductPricingSettings()
 
         const homePageData = await homeModel.getHomePageData()
 
@@ -44,6 +47,7 @@ const getHomePage = async (req, res) => {
         homePageData.featuredProducts = await Promise.all(
             homePageData.featuredProducts.map(async (product) => ({
                 ...product,
+                ...calculateProductPrice(product, pricingSettings),
                 image_url: await resolveMediaUrl(
                     req,
                     'products',
