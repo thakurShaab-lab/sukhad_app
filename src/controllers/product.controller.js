@@ -10,7 +10,6 @@ const BASE_URL = env.staticFileBaseUrl.replace(/\/+$/, '')
 const noImagePath = `${BASE_URL}/no_image.png`
 
 
-
 const products = async (req, res) => {
     try {
         if (!(await validateRequestDevice(req, res))) return
@@ -21,6 +20,7 @@ const products = async (req, res) => {
             prod_make,
             car_model,
             ref_id,
+            featured_prod,
             sort,
         } = req.body
 
@@ -69,7 +69,7 @@ const products = async (req, res) => {
         const productMake = parseText(prod_make, 'prod_make')
         const carModel = parseText(car_model, 'car_model')
         const carRefId = parseText(ref_id, 'ref_id')
-
+        const featuredProduct = normalizeOptional(featured_prod)
         const normalizedSort = normalizeOptional(sort)
 
         if (
@@ -89,6 +89,7 @@ const products = async (req, res) => {
             car_model: carModel,
             ref_id: carRefId,
             sort: normalizedSort,
+            featured_prod: featuredProduct,
         })
 
         if (!productList.length) {

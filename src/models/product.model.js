@@ -14,6 +14,7 @@ const products = async ({
     sub_cat_id,
     prod_make,
     car_model,
+    featured_prod,
     ref_id,
     sort,
 } = {}) => {
@@ -55,6 +56,15 @@ const products = async ({
         if (ref_id !== undefined && ref_id !== null) {
             conditions.push(
                 eq(wlProducts.referenceId, ref_id)
+            )
+        }
+
+        if (featured_prod === 'featured_prod') {
+            conditions.push(
+                and(
+                    eq(wlProducts.isFeatured, 1),
+                    eq(wlProducts.status, 1)
+                )
             )
         }
 

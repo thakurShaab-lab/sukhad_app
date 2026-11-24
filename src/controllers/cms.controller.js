@@ -203,7 +203,8 @@ const aboutUs = async (req, res) => {
                         expertiseImage: imageUrl
                     }
                 })
-            )
+            ),
+            convertreData: 'Catalytic converters contain a precious metal catalyst that converts harmful gases from the engine into less harmful emissions.'
         }
 
         return res.status(200).json(convertNulls(response))
