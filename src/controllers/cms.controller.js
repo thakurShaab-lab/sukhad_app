@@ -3,7 +3,7 @@ const { resolveMediaUrl } = require('../utils/mediaUrl')
 const env = require('../config/env')
 const { convertNulls } = require('../utils/convertNulls')
 const { validateRequestDevice } = require('./device&app.controller')
-const {formatHtml} = require('../utils/formatHtml')
+const { formatHtml } = require('../utils/formatHtml')
 
 const normalizePageName = (value) => {
     return value
@@ -185,7 +185,9 @@ const aboutUs = async (req, res) => {
                     result.aboutUs.pageImage,
                     noImagePath,
                     BASE_URL
-                )
+                ),
+                convertreTitle: 'Catalytic Converter & Scrap Trading',
+                convertreDescription: 'Catalytic converters contain a precious metal catalyst that converts harmful gases from the engine into less harmful emissions.'
             },
             aboutChoose: result.aboutChoose,
             expertise: await Promise.all(
@@ -204,7 +206,6 @@ const aboutUs = async (req, res) => {
                     }
                 })
             ),
-            convertreData: 'Catalytic converters contain a precious metal catalyst that converts harmful gases from the engine into less harmful emissions.'
         }
 
         return res.status(200).json(convertNulls(response))
