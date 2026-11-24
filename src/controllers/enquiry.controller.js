@@ -29,14 +29,18 @@ const postEnquiry = async (req, res) => {
             }
         }
 
+
         const hasProductId =
-            product_id !== undefined && product_id !== null && product_id !== '' && Number(product_id) >= 0
+            product_id !== undefined &&
+            product_id !== null &&
+            String(product_id).trim() !== '' &&
+            Number(product_id) !== 0
 
         let productId
         let product_name
 
         if (hasProductId) {
-            if (!/^[1-9]\d*$/.test(String(product_id))) {
+            if (!/^[1-9]\d*$/.test(String(product_id).trim())) {
                 return res.status(200).json({
                     success: false,
                     message: 'A valid product ID is required'
@@ -63,6 +67,10 @@ const postEnquiry = async (req, res) => {
 
             product_name = exists.productTitle
         }
+
+        // Automatically determine enquiry type
+        enquiryType = hasProductId ? 2 : 1
+
 
         let entityTitle
 
@@ -174,7 +182,7 @@ const postEnquiry = async (req, res) => {
 
         const enquiryData = {
             ...(productId !== undefined && { entityId: productId }),
-            ...(enquiryType !== undefined && { type: enquiryType }),
+            type: enquiryType,
             ...(entityTitle !== undefined && { entityTitle }),
             ...(firstName !== undefined && { firstName }),
             ...(lastName !== undefined && { lastName }),
@@ -190,7 +198,7 @@ const postEnquiry = async (req, res) => {
 
         const result = await enquiryModel.createEnquiry(enquiryData)
 
-        if (type === 2) {
+        if (enquiryType === 2) {
             return res.status(200).json(
                 convertNulls({
                     success: true,
@@ -200,7 +208,8 @@ const postEnquiry = async (req, res) => {
                 })
             )
         }
-        if (type === 1) {
+
+        if (enquiryType === 1) {
             return res.status(200).json(
                 convertNulls({
                     success: true,
