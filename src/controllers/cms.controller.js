@@ -174,6 +174,8 @@ const aboutUs = async (req, res) => {
             )
         }
 
+        const { companyOverview, converter } = result
+
         const response = {
             success: true,
             data: {
@@ -186,8 +188,24 @@ const aboutUs = async (req, res) => {
                     noImagePath,
                     BASE_URL
                 ),
-                convertreTitle: 'Catalytic Converter & Scrap Trading',
-                convertreDescription: 'Catalytic converters contain a precious metal catalyst that converts harmful gases from the engine into less harmful emissions.'
+                companyOverviewTitle: companyOverview?.pageName ?? null,
+                companyOverviewDescription: companyOverview ? formatHtml(companyOverview.pageDescription) : null,
+                companyOverviewImage: await resolveMediaUrl(
+                    req,
+                    'cms',
+                    companyOverview?.pageImage,
+                    noImagePath,
+                    BASE_URL
+                ),
+                convertreTitle: converter?.pageName ?? null,
+                convertreDescription: converter ? formatHtml(converter.pageDescription) : null,
+                convertreImage: await resolveMediaUrl(
+                    req,
+                    'cms',
+                    converter?.pageImage,
+                    noImagePath,
+                    BASE_URL
+                ),
             },
             aboutChoose: result.aboutChoose,
             expertise: await Promise.all(

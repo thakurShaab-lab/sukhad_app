@@ -1,9 +1,15 @@
 
-const { eq, and, sql } = require('drizzle-orm')
+const { eq, and, sql, inArray } = require('drizzle-orm')
 const db = require('../config/drizzle')
 const { wlCmsPages } = require('../schema/wl-cms-pages')
 const { wlAboutChoose } = require('../schema/wl-about-choose')
 const { wlExpertise } = require('../schema/wl-expertise')
+
+// wl_cms_pages rows shown as sections on the About Us page
+const ABOUT_US_SECTION_PAGE_IDS = {
+    companyOverview: 6,     // Company Overview
+    converter: 7,           // Catalytic Converter & Scrap Trading
+}
 
 const findActivePagesByName = async (normalizedSearch) => {
     const pages = await db
@@ -112,10 +118,29 @@ const aboutUs = async (normalizedSearch) => {
         .where(eq(wlExpertise.status, 1))
         .orderBy(wlExpertise.sortOrder)
 
+    const sectionPages = await db
+        .select({
+            pageId: wlCmsPages.pageId,
+            pageName: wlCmsPages.pageName,
+            pageDescription: wlCmsPages.pageDescription,
+            pageImage: wlCmsPages.pageImage,
+        })
+        .from(wlCmsPages)
+        .where(
+            and(
+                inArray(wlCmsPages.pageId, Object.values(ABOUT_US_SECTION_PAGE_IDS)),
+                eq(wlCmsPages.status, '1')
+            )
+        )
+
+    const findSection = (pageId) => sectionPages.find((item) => item.pageId === pageId) || null
+
     const aboutUs = aboutUsData[0] || []
 
     return {
         aboutUs,
+        companyOverview: findSection(ABOUT_US_SECTION_PAGE_IDS.companyOverview),
+        converter: findSection(ABOUT_US_SECTION_PAGE_IDS.converter),
         aboutChoose,
         expertise
     }
