@@ -16,6 +16,7 @@ const products = async ({
     car_model,
     featured_prod,
     ref_id,
+    prod_code,
     sort,
 } = {}) => {
     try {
@@ -46,10 +47,16 @@ const products = async ({
                 like(wlProducts.productMake, `%${prod_make}%`)
             )
         }
-
+        
         if (car_model?.length) {
             conditions.push(
                 like(wlProducts.productModel, `%${car_model}%`)
+            )
+        }
+
+        if (prod_code !== undefined && prod_code !== null && String(prod_code).trim() !== '') {
+            conditions.push(
+                like(wlProducts.productCode, `%${prod_code}%`)
             )
         }
 

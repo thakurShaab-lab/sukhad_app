@@ -167,7 +167,7 @@ const createTestimonial = async (req, res) => {
 
         const testimonialData = {
             friendlyUrl: friendly_url,
-            status: 1,
+            status: 0,
             postedDate: new Date()
                 .toISOString()
                 .slice(0, 19)

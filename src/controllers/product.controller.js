@@ -19,6 +19,7 @@ const products = async (req, res) => {
             sub_cat_id,
             prod_make,
             car_model,
+            prod_code,
             ref_id,
             featured_prod,
             sort,
@@ -69,6 +70,7 @@ const products = async (req, res) => {
         const productMake = parseText(prod_make, 'prod_make')
         const carModel = parseText(car_model, 'car_model')
         const carRefId = parseText(ref_id, 'ref_id')
+        const productCode = parseText(prod_code, 'prod_code')
         const featuredProduct = normalizeOptional(featured_prod)
         const normalizedSort = normalizeOptional(sort)
 
@@ -88,6 +90,7 @@ const products = async (req, res) => {
             prod_make: productMake,
             car_model: carModel,
             ref_id: carRefId,
+            prod_code: productCode,
             sort: normalizedSort,
             featured_prod: featuredProduct,
         })

@@ -1,5 +1,5 @@
 
-const { eq, and, asc } = require('drizzle-orm')
+const { eq, and, asc, count } = require('drizzle-orm')
 const db = require('../config/drizzle')
 const { wlGallery } = require('../schema/wl-gallery')
 const { wlAlbums } = require('../schema/wl-albums')
@@ -47,8 +47,26 @@ const getGalleryVideos = async (categoryId) => {
         .orderBy(asc(wlVideos.sortOrder))
 }
 
+// active media count per album, e.g. { 1: 6, 3: 4 } (same filters as getGalleryImages / getGalleryVideos)
+const getMediaCounts = async (type) => {
+    const table = type === 'images' ? wlGallery : wlVideos
+    const activeStatus = type === 'images' ? '1' : 1
+
+    const rows = await db
+        .select({
+            categoryId: table.categoryId,
+            total: count(),
+        })
+        .from(table)
+        .where(eq(table.status, activeStatus))
+        .groupBy(table.categoryId)
+
+    return Object.fromEntries(rows.map((row) => [row.categoryId, Number(row.total)]))
+}
+
 module.exports = {
     getAlbums,
+    getMediaCounts,
     getGalleryImages,
     getGalleryVideos
 }

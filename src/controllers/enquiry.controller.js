@@ -9,7 +9,6 @@ const postEnquiry = async (req, res) => {
         const {
             type,
             product_id,
-            entity_title,
             full_name,
             mobile_number,
             enquiry,
@@ -70,25 +69,6 @@ const postEnquiry = async (req, res) => {
 
         // Automatically determine enquiry type
         enquiryType = hasProductId ? 2 : 1
-
-
-        let entityTitle
-
-        if (entity_title !== undefined && entity_title !== null && entity_title !== '') {
-            if (
-                typeof entity_title !== 'string' ||
-                !entity_title.trim() ||
-                entity_title.trim().length > 80 ||
-                !/^[\p{L}\p{M}][\p{L}\p{M}\s.'’-]*$/u.test(entity_title.trim())
-            ) {
-                return res.status(200).json({
-                    success: false,
-                    message: 'Enter a valid Enquiry Title (maximum 80 characters)'
-                })
-            }
-
-            entityTitle = entity_title.trim()
-        }
 
         let firstName
         let lastName
@@ -183,7 +163,7 @@ const postEnquiry = async (req, res) => {
         const enquiryData = {
             ...(productId !== undefined && { entityId: productId }),
             type: enquiryType,
-            ...(entityTitle !== undefined && { entityTitle }),
+            entityTitle: product_name,
             ...(firstName !== undefined && { firstName }),
             ...(lastName !== undefined && { lastName }),
             ...(emailAddress !== undefined && { email: emailAddress }),
