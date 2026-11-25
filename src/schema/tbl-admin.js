@@ -1,4 +1,4 @@
-const { mysqlTable, mysqlEnum, primaryKey, int, tinyint, bigint, float, varchar, text, date, datetime } = require("drizzle-orm/mysql-core")
+const { mysqlTable, mysqlEnum, primaryKey, int, tinyint, bigint, float, decimal, varchar, text, date, datetime } = require("drizzle-orm/mysql-core")
 
 const tblAdmin = mysqlTable("tbl_admin", {
 	adminId: int("admin_id").autoincrement().notNull(),
@@ -57,6 +57,7 @@ const tblAdmin = mysqlTable("tbl_admin", {
 	deliveryLeftStatus: tinyint("delivery_left_status").default(1).notNull(),
 	verificationStatus: tinyint("verification_status").default(1).notNull(),
 	emailVerificationStatus: tinyint("email_verification_status").default(1).notNull(),
+	adminCent: decimal("admin_cent", { precision: 10, scale: 2 }).default(0).notNull(),
 },
 (table) => [
 	primaryKey({ columns: [table.adminId], name: "tbl_admin_admin_id"}),

@@ -1,5 +1,6 @@
 const { getLatestMetalPrices } = require('./metalData')
 const metalCalculatorModel = require('../models/metalCalculator.model')
+const adminModel = require('../models/admin.model')
 
 const CURRENCY = 'INR'
 const PPM_DIVISOR = 1000000
@@ -208,6 +209,47 @@ const calculateProductPrice = (product, settings) => {
     }
 }
 
+/**
+ * Percentage (tbl_admin.admin_cent) of the product price to display, e.g. 10 => 10%.
+ * Returns null when it cannot be read; never throws.
+ */
+const getProductPricePercent = async () => {
+    try {
+        const value = await adminModel.getAdminCent()
+        const percent = toSafeNumber(value, null)
+        return percent === null ? null : Math.min(percent, 100)
+    } catch (error) {
+        console.error('Product price percentage error:', error.message)
+        return null
+    }
+}
+
+/**
+ * Applies the admin percentage to a calculateProductPrice() result:
+ * productPrice and the metal amounts in priceDetails become `percent`% of the original;
+ * originalPrice keeps the full price.
+ * When the percentage is unavailable the prices are not shown (null).
+ */
+const applyPricePercent = (priced, percent) => {
+    const scale = (value) =>
+        value === null || value === undefined || percent === null
+            ? null
+            : round2((value * percent) / 100)
+
+    return {
+        productPrice: scale(priced.productPrice),
+        // full calculated price before the admin_cent percentage
+        originalPrice: priced.productPrice,
+        priceDetails: {
+            ...priced.priceDetails,
+            platinum: scale(priced.priceDetails.platinum),
+            palladium: scale(priced.priceDetails.palladium),
+            rhodium: scale(priced.priceDetails.rhodium),
+            grandTotal: scale(priced.priceDetails.grandTotal),
+        },
+    }
+}
+
 module.exports = {
     CURRENCY,
     DEFAULT_RETURN_RATE,
@@ -218,4 +260,6 @@ module.exports = {
     calculateMetalValues,
     getProductPricingSettings,
     calculateProductPrice,
+    getProductPricePercent,
+    applyPricePercent,
 }
