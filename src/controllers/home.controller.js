@@ -3,7 +3,12 @@ const { resolveMediaUrl } = require('../utils/mediaUrl')
 const env = require('../config/env')
 const { convertNulls } = require('../utils/convertNulls')
 const { getMetalRates } = require('../utils/metalData')
-const { getProductPricingSettings, calculateProductPrice } = require('../utils/metalPricing')
+const {
+    getProductPricingSettings,
+    calculateProductPrice,
+    getProductPricePercent,
+    applyPricePercent,
+} = require('../utils/metalPricing')
 
 const getHomePage = async (req, res) => {
     try {
@@ -22,7 +27,11 @@ const getHomePage = async (req, res) => {
 
         const noImagePath = `${BASE_URL}/no_image.png`
 
-        const pricingSettings = await getProductPricingSettings()
+        // featured product price = admin_cent % (tbl_admin) of the calculated metal price, same as /product-pages/list
+        const [pricingSettings, pricePercent] = await Promise.all([
+            getProductPricingSettings(),
+            getProductPricePercent(),
+        ])
 
         const homePageData = await homeModel.getHomePageData()
 
@@ -47,7 +56,7 @@ const getHomePage = async (req, res) => {
         homePageData.featuredProducts = await Promise.all(
             homePageData.featuredProducts.map(async (product) => ({
                 ...product,
-                ...calculateProductPrice(product, pricingSettings),
+                ...applyPricePercent(calculateProductPrice(product, pricingSettings), pricePercent),
                 image_url: await resolveMediaUrl(
                     req,
                     'products',
