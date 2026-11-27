@@ -22,11 +22,11 @@ const updateCalculation = async (id, data) => {
 // The id the single calculator record gets when the table is empty
 const SINGLE_RECORD_ID = 1
 
-// wl_metal_calculator holds exactly one record, whoever calls the calculator:
-//   - a record exists: it is updated with every field of this calculation (customers_id, app_id, device_id, the
-//     inputs, prices and results, updated_at). created_at keeps when the record was first made.
+// wl_metal_calculator holds exactly one record (the calculator settings), saved by /metal-price-setting:
+//   - a record exists: it is updated with every field of these settings (customers_id, app_id, device_id, the
+//     settings, prices and updated_at). created_at keeps when the record was first made.
 //   - the table is empty: the record is created with id 1. INSERT ... ON DUPLICATE KEY UPDATE makes two first
-//     calculations at the same moment end up as one record (the second updates it) instead of two.
+//     saves at the same moment end up as one record (the second updates it) instead of two.
 //   - more than one record (only possible from data saved before this rule): the newest is kept and updated, the
 //     others are removed, so one record remains.
 // Returns { id } of the record.
@@ -58,7 +58,7 @@ const saveCalculation = async (data) =>
         return { id: kept.id }
     })
 
-// latest saved calculator record (its settings and prices are used for product pricing)
+// the saved calculator settings record (used by /metal-price-calculator), or null
 const findLatestCalculation = async () => {
     const [record] = await db
         .select()

@@ -11,17 +11,7 @@ const wlMetalCalculator = mysqlTable("wl_metal_calculator", {
 	deviceId: varchar("device_id", { length: 255 }),
 	currency: varchar({ length: 3 }).default('INR').notNull(),
 
-	// request: weight
-	weightUnit: mysqlEnum("weight_unit", ['kg','lb']).default('kg').notNull(),
-	weight: quantity("weight"),
-	weightKg: quantity("weight_kg"),
-
-	// request: PPM
-	platinumPpm: quantity("platinum_ppm"),
-	palladiumPpm: quantity("palladium_ppm"),
-	rhodiumPpm: quantity("rhodium_ppm"),
-
-	// request: calculator settings
+	// calculator settings (saved by /metal-price-setting; weight / PPM are never stored)
 	returnRatePt: percent("return_rate_pt", 85),
 	returnRatePd: percent("return_rate_pd", 85),
 	returnRateRh: percent("return_rate_rh", 85),
@@ -33,9 +23,9 @@ const wlMetalCalculator = mysqlTable("wl_metal_calculator", {
 	refiningChargePd: amount("refining_charge_pd"),
 	refiningChargeRh: amount("refining_charge_rh"),
 	daysOut: int("days_out").default(120).notNull(),
-	interestRate: percent("interest_rate"),
+	interestRate: percent("interest_rate").default(4),
 
-	// request (or live market when not entered): price per kg in INR
+	// metal prices per kg (USD); source "market" = live market price at calculation time
 	platinumPricePerKg: amount("platinum_price_per_kg"),
 	palladiumPricePerKg: amount("palladium_price_per_kg"),
 	rhodiumPricePerKg: amount("rhodium_price_per_kg"),

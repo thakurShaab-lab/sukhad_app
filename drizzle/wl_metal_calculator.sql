@@ -1,5 +1,6 @@
--- Metal price calculator: request details + calculated prices
--- Used by POST/GET /api/metal_stats_pages/metal-price-calculator
+-- Metal price calculator settings (one record)
+-- Saved by POST /api/metal_stats_pages/metal-price-setting, read by /metal-price-calculator and /metal-specifications
+-- Weight / weight unit / PPM are calculator inputs only and are not stored
 -- Drizzle schema: src/schema/wl-metal-calculator.js
 
 CREATE TABLE IF NOT EXISTS `wl_metal_calculator` (
@@ -8,14 +9,6 @@ CREATE TABLE IF NOT EXISTS `wl_metal_calculator` (
   `app_id` varchar(100) DEFAULT NULL,
   `device_id` varchar(255) DEFAULT NULL,
   `currency` varchar(3) NOT NULL DEFAULT 'INR',
-
-  `weight_unit` enum('kg','lb') NOT NULL DEFAULT 'kg',
-  `weight` decimal(14,4) NOT NULL DEFAULT '0.0000',
-  `weight_kg` decimal(14,4) NOT NULL DEFAULT '0.0000',
-
-  `platinum_ppm` decimal(14,4) NOT NULL DEFAULT '0.0000',
-  `palladium_ppm` decimal(14,4) NOT NULL DEFAULT '0.0000',
-  `rhodium_ppm` decimal(14,4) NOT NULL DEFAULT '0.0000',
 
   `return_rate_pt` decimal(7,4) NOT NULL DEFAULT '85.0000',
   `return_rate_pd` decimal(7,4) NOT NULL DEFAULT '85.0000',
@@ -55,3 +48,8 @@ CREATE TABLE IF NOT EXISTS `wl_metal_calculator` (
 
 -- For a table created before `updated_at` was added:
 -- ALTER TABLE `wl_metal_calculator` ADD COLUMN `updated_at` datetime DEFAULT NULL AFTER `created_at`;
+
+-- Removing the weight / PPM columns from a table created before they were dropped:
+-- ALTER TABLE `wl_metal_calculator`
+--   DROP COLUMN `weight_unit`, DROP COLUMN `weight`, DROP COLUMN `weight_kg`,
+--   DROP COLUMN `platinum_ppm`, DROP COLUMN `palladium_ppm`, DROP COLUMN `rhodium_ppm`;
