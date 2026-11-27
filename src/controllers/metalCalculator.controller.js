@@ -4,11 +4,19 @@ const {
     CURRENCY,
     DEFAULT_RETURN_RATE,
     DEFAULT_DAYS_OUT,
+    VALUATION_STATUS,
     round2,
     round4,
-    getMarketPricesPerKg,
     calculateMetalValues,
 } = require('../utils/metalPricing')
+const { getMarketPricesPerKg } = require('../utils/metalMarketPrice')
+const { getExchangeRate } = require('../utils/metalData')
+const { currencyFields } = require('../utils/currencySymbol')
+
+const VALUATION_MESSAGES = {
+    [VALUATION_STATUS.CALCULATED]: 'Scrap value calculated successfully.',
+    [VALUATION_STATUS.PENDING]: 'Enter a valid scrap weight and metal PPM (greater than 0) to calculate the scrap value. Current metal prices are shown.',
+}
 
 const WEIGHT_UNITS = ['kg', 'lb']
 
@@ -63,13 +71,8 @@ const calculateMetalPrice = async (req, res) => {
     try {
         const body = req.body || {}
 
-        const currency = isEmpty(body.currency)
-            ? CURRENCY
-            : String(body.currency).trim().toUpperCase()
-
-        if (currency !== CURRENCY) {
-            return badRequest(res, `Only ${CURRENCY} currency is supported.`)
-        }
+        // the calculator always works in USD; req.body.currency is accepted for payload compatibility but not used
+        const currency = CURRENCY
 
         const weightUnit = isEmpty(body.weight_unit)
             ? 'kg'
@@ -100,7 +103,10 @@ const calculateMetalPrice = async (req, res) => {
         const inputs = METALS.map((metal) => ({
             ...metal,
             ppm: toNumber(body[metal.ppmKey]),
-            pricePerKg: isEmpty(body[metal.priceKey]) ? null : Number(body[metal.priceKey]),
+            // empty or 0 price => use the live market price
+            pricePerKg: isEmpty(body[metal.priceKey]) || Number(body[metal.priceKey]) === 0
+                ? null
+                : Number(body[metal.priceKey]),
             returnRate: toNumber(body[metal.returnRateKey], DEFAULT_RETURN_RATE),
             minimumDeduction: toNumber(body[metal.minimumDeductionKey]),
             refiningChargePerKg: toNumber(body[metal.refiningChargeKey]),
@@ -128,32 +134,40 @@ const calculateMetalPrice = async (req, res) => {
             }
         }
 
-        // by default the calculator uses current market prices for any price not entered
-        const needsMarketPrice = inputs.some((input) => input.pricePerKg === null)
-        let marketPrices = {}
+        // live market price (requested currency) only for the metals whose price is empty or 0
+        const marketSymbols = inputs
+            .filter((input) => input.pricePerKg === null)
+            .map((input) => input.symbol)
+        let market = null
 
-        if (needsMarketPrice) {
+        if (marketSymbols.length) {
             try {
-                marketPrices = await getMarketPricesPerKg(inputs.map((input) => input.symbol))
+                market = await getMarketPricesPerKg(marketSymbols, currency)
             } catch (error) {
                 console.error('Metal price calculator market rate error:', error.message)
 
+                if (error.code === 'INVALID_CURRENCY') {
+                    return badRequest(res, `Currency ${currency} is not supported by the market price provider.`)
+                }
+
+                // never calculate with a missing, stale or fabricated price
                 return res.status(503).json({
                     success: false,
-                    message: 'Market rates are currently unavailable. Please enter the metal prices manually.',
+                    message: `Live market price is currently unavailable for ${marketSymbols.join(', ')}. ` +
+                        'Please try again shortly or enter the metal price per kg manually.',
                 })
             }
         }
 
-        // shared pricing logic (also used for the product list / detail prices)
         const {
+            valuationStatus,
             weightKg,
             grossValue,
             totalRefiningCharge,
             totalTreatmentFee,
             financeCharge,
             totalValue,
-            prices,
+            prices: calculatedPrices,
             breakdown,
         } = calculateMetalValues({
             weight,
@@ -165,12 +179,37 @@ const calculateMetalPrice = async (req, res) => {
                 ...input,
                 priceSource: input.pricePerKg === null ? 'market' : 'user',
                 pricePerKg: input.pricePerKg === null
-                    ? marketPrices[input.symbol] ?? 0
+                    ? market.pricesPerKg[input.symbol]
                     : input.pricePerKg,
             })),
         })
 
         const [platinum, palladium, rhodium] = breakdown
+
+        const marketPrice = market
+            ? {
+                source: market.source,
+                ...currencyFields(market.currency),
+                unit: market.unit,
+                quoteTimestamp: market.quoteTimestamp,
+                fetchedAt: market.fetchedAt,
+                pricesPerKg: Object.fromEntries(
+                    breakdown
+                        .filter((metal) => metal.priceSource === 'market')
+                        .map((metal) => [metal.name.toLowerCase(), metal.pricePerKg])
+                ),
+            }
+            : null
+
+        // no scrap details (weight / PPM 0): show the price per kg (live market price when not entered)
+        const prices = valuationStatus === VALUATION_STATUS.PENDING
+            ? {
+                platinum: platinum.pricePerKg,
+                palladium: palladium.pricePerKg,
+                rhodium: rhodium.pricePerKg,
+                grandTotal: round2(platinum.pricePerKg + palladium.pricePerKg + rhodium.pricePerKg),
+            }
+            : calculatedPrices
 
         const now = toMysqlDateTime(new Date())
 
@@ -178,7 +217,7 @@ const calculateMetalPrice = async (req, res) => {
             customersId: req.user?.id ?? 0,
             appId: req.user?.app_id ?? null,
             deviceId: req.user?.device_id ?? null,
-            currency: CURRENCY,
+            currency,
             weightUnit,
             weight,
             weightKg: round4(weightKg),
@@ -221,7 +260,9 @@ const calculateMetalPrice = async (req, res) => {
             message: 'Metal price calculated successfully.',
             data: {
                 id: saved?.id ?? null,
-                currency: CURRENCY,
+                valuation_status: valuationStatus,
+                valuation_message: VALUATION_MESSAGES[valuationStatus],
+                ...currencyFields(currency),
                 weightUnit,
                 weight,
                 weightKg: round4(weightKg),
@@ -235,8 +276,9 @@ const calculateMetalPrice = async (req, res) => {
                 treatmentFee: round2(totalTreatmentFee),
                 financeCharge: round2(financeCharge),
                 totalValue: round2(totalValue),
-                prices,
-                breakdown,
+                prices: { ...currencyFields(currency), ...prices },
+                marketPrice,
+                breakdown: breakdown.map((metal) => ({ ...metal, ...currencyFields(currency) })),
             },
         }))
     } catch (error) {
@@ -251,7 +293,7 @@ const calculateMetalPrice = async (req, res) => {
 
 const formatCalculation = (record) => ({
     id: record.id,
-    currency: record.currency,
+    ...currencyFields(record.currency),
     weightUnit: record.weightUnit,
     weight: record.weight,
     weightKg: record.weightKg,
@@ -266,6 +308,7 @@ const formatCalculation = (record) => ({
     financeCharge: record.financeCharge,
     totalValue: record.totalValue,
     prices: {
+        ...currencyFields(record.currency),
         platinum: record.platinumPrice,
         palladium: record.palladiumPrice,
         rhodium: record.rhodiumPrice,
@@ -278,6 +321,7 @@ const formatCalculation = (record) => ({
             ppm: record.platinumPpm,
             minimumDeduction: record.minimumDeductionPt,
             returnRate: record.returnRatePt,
+            ...currencyFields(record.currency),
             pricePerKg: record.platinumPricePerKg,
             priceSource: record.platinumPriceSource,
             refiningChargePerKg: record.refiningChargePt,
@@ -289,6 +333,7 @@ const formatCalculation = (record) => ({
             ppm: record.palladiumPpm,
             minimumDeduction: record.minimumDeductionPd,
             returnRate: record.returnRatePd,
+            ...currencyFields(record.currency),
             pricePerKg: record.palladiumPricePerKg,
             priceSource: record.palladiumPriceSource,
             refiningChargePerKg: record.refiningChargePd,
@@ -300,6 +345,7 @@ const formatCalculation = (record) => ({
             ppm: record.rhodiumPpm,
             minimumDeduction: record.minimumDeductionRh,
             returnRate: record.returnRateRh,
+            ...currencyFields(record.currency),
             pricePerKg: record.rhodiumPricePerKg,
             priceSource: record.rhodiumPriceSource,
             refiningChargePerKg: record.refiningChargeRh,
@@ -310,16 +356,59 @@ const formatCalculation = (record) => ({
     updatedAt: record.updatedAt,
 })
 
+// money columns of wl_metal_calculator (amounts and per-kg prices / charges / fees)
+const MONEY_FIELDS = [
+    'treatmentFee',
+    'refiningChargePt', 'refiningChargePd', 'refiningChargeRh',
+    'platinumPricePerKg', 'palladiumPricePerKg', 'rhodiumPricePerKg',
+    'platinumPrice', 'palladiumPrice', 'rhodiumPrice', 'grandTotal',
+    'grossValue', 'totalRefiningCharge', 'totalTreatmentFee', 'financeCharge', 'totalValue',
+]
+
+// records saved in another currency (older INR records) are shown in USD at the live exchange rate
+const toCalculatorCurrency = async (records) => {
+    const currencies = [...new Set(
+        records.map((record) => String(record.currency || CURRENCY).toUpperCase())
+    )].filter((code) => code !== CURRENCY)
+
+    const rates = Object.fromEntries(
+        await Promise.all(currencies.map(async (code) => [code, await getExchangeRate(code, CURRENCY)]))
+    )
+
+    return records.map((record) => {
+        const code = String(record.currency || CURRENCY).toUpperCase()
+        if (code === CURRENCY) return record
+
+        const converted = { ...record, currency: CURRENCY }
+        for (const field of MONEY_FIELDS) {
+            converted[field] = round2(Number(record[field] || 0) * rates[code])
+        }
+        return converted
+    })
+}
+
 const getMetalPriceCalculations = async (req, res) => {
     try {
         const records = await metalCalculatorModel.getCalculations()
+
+        let usdRecords
+        try {
+            usdRecords = await toCalculatorCurrency(records)
+        } catch (error) {
+            console.error('Metal price calculator exchange rate error:', error.message)
+
+            return res.status(503).json({
+                success: false,
+                message: `Exchange rate to ${CURRENCY} is currently unavailable. Please try again shortly.`,
+            })
+        }
 
         return res.status(200).json(convertNulls({
             success: true,
             message: 'Metal price calculations retrieved successfully.',
             data: {
-                total: records.length,
-                records: records.map(formatCalculation),
+                total: usdRecords.length,
+                records: usdRecords.map(formatCalculation),
             },
         }))
     } catch (error) {

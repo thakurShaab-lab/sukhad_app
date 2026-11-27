@@ -60,9 +60,19 @@ const products = async ({
             )
         }
 
-        if (ref_id !== undefined && ref_id !== null) {
+        // ref_id = universal search: partial match on product name, reference id, product code, car model or car make
+        if (ref_id !== undefined && ref_id !== null && String(ref_id).trim() !== '') {
+            // escape LIKE wildcards so "%" / "_" typed by the user are matched literally
+            const term = `%${String(ref_id).trim().replace(/[\\%_]/g, '\\$&')}%`
+
             conditions.push(
-                eq(wlProducts.referenceId, ref_id)
+                or(
+                    like(wlProducts.productTitle, term),
+                    like(wlProducts.referenceId, term),
+                    like(wlProducts.productCode, term),
+                    like(wlProducts.productModel, term),
+                    like(wlProducts.productMake, term)
+                )
             )
         }
 

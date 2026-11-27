@@ -4,16 +4,12 @@ const env = require('../config/env')
 const { convertNulls } = require('../utils/convertNulls')
 const { formatHtml } = require('../utils/formatHtml')
 const { validateRequestDevice } = require('./device&app.controller')
+// product price (independent of the metal price calculator API): metal content x live price per gram, then admin_cent %
 const {
-    getProductPricingSettings,
-    calculateProductPrice,
+    getMarketPricesPerGram,
     getProductPricePercent,
-    applyPricePercent,
-} = require('../utils/metalPricing')
-
-// product price shown in the app = admin_cent % (tbl_admin) of the calculated metal price
-const getDisplayPrice = (product, pricingSettings, pricePercent) =>
-    applyPricePercent(calculateProductPrice(product, pricingSettings), pricePercent)
+    calculateProductPrice,
+} = require('../utils/productPricing')
 
 const BASE_URL = env.staticFileBaseUrl.replace(/\/+$/, '')
 const noImagePath = `${BASE_URL}/no_image.png`
@@ -112,15 +108,15 @@ const products = async (req, res) => {
         }
 
         // same pricing settings / metal rates for every product in the list
-        const [pricingSettings, pricePercent] = await Promise.all([
-            getProductPricingSettings(),
+        const [pricesPerGram, pricePercent] = await Promise.all([
+            getMarketPricesPerGram(),
             getProductPricePercent(),
         ])
 
         const updatedProducts = await Promise.all(
             productList.map(async (product) => ({
                 ...product,
-                ...getDisplayPrice(product, pricingSettings, pricePercent),
+                ...calculateProductPrice(product, pricesPerGram, pricePercent),
                 productDescription: formatHtml(product.productDescription),
                 productImage: await resolveMediaUrl(
                     req,
@@ -206,14 +202,14 @@ const product = async (req, res) => {
             )
         }
 
-        const [pricingSettings, pricePercent] = await Promise.all([
-            getProductPricingSettings(),
+        const [pricesPerGram, pricePercent] = await Promise.all([
+            getMarketPricesPerGram(),
             getProductPricePercent(),
         ])
 
         const updatedProduct = {
             ...productData,
-            ...getDisplayPrice(productData, pricingSettings, pricePercent),
+            ...calculateProductPrice(productData, pricesPerGram, pricePercent),
             productDescription: formatHtml(productData.productDescription),
             productImage: productImages
         }

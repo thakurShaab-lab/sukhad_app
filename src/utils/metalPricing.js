@@ -1,8 +1,28 @@
-const { getLatestMetalPrices } = require('./metalData')
-const metalCalculatorModel = require('../models/metalCalculator.model')
-const adminModel = require('../models/admin.model')
+/**
+ * Metal price calculator (/metal_stats_pages/metal-price-calculator) - calculation logic only.
+ * Not used by product pricing (see productPricing.js).
+ *
+ * Based on the "UPDATED SUKHAD ENTERPRISES" workbook, calculated in KG instead of troy ounces
+ * (prices are per KG), with no 3-decimal truncation of quantities.
+ *
+ * Per metal (Pt, Pd, Rh):
+ *   1. Theoretical KG = scrap weight KG x PPM / 1,000,000
+ *   2. Returned KG    = theoretical KG x return rate / 100
+ *   3. Payable KG     = minimum deduction (PPM of the scrap weight) applied after the return rate:
+ *                       payable KG = max(min(returned KG, theoretical KG - weight KG x deduction PPM / 1,000,000), 0)
+ *                       i.e. the deduction is the return-rate loss, but never less than the minimum deduction.
+ *                       With deduction 0 this is exactly the workbook (returned KG).
+ *   4. Metal value    = payable KG x price per KG
+ *   5. Refining       = payable KG x refining charge per KG
+ * Totals:
+ *   6. Gross metal value = Pt value + Pd value + Rh value
+ *   7. Treatment fee     = scrap weight KG x treatment fee (charged once)
+ *   8. Lease charge      = gross metal value x interest rate / 100 x days out / 365   (workbook: =B18*B19*120/365)
+ *   9. Final scrap value = gross metal value - refining charges - treatment fee - lease charge
+ */
 
-const CURRENCY = 'INR'
+// metal price calculator currency (product prices in productPricing.js stay in INR)
+const CURRENCY = 'USD'
 const PPM_DIVISOR = 1000000
 const GRAMS_PER_KG = 1000
 const KG_PER_LB = 0.45359237
@@ -14,37 +34,30 @@ const DAYS_PER_YEAR = 365
 const DEFAULT_RETURN_RATE = 85
 const DEFAULT_DAYS_OUT = 120
 
-const METALS = [
-    { key: 'platinum', symbol: 'XPT', name: 'Platinum', productField: 'prodPt', suffix: 'Pt' },
-    { key: 'palladium', symbol: 'XPD', name: 'Palladium', productField: 'prodPd', suffix: 'Pd' },
-    { key: 'rhodium', symbol: 'XRH', name: 'Rhodium', productField: 'prodPh', suffix: 'Rh' },
-]
-
-const round2 = (n) => Math.round(n * 100) / 100
-const round4 = (n) => Math.round(n * 10000) / 10000
-
-const isEmpty = (value) =>
-    value === undefined || value === null || String(value).trim() === ''
-
-// null / empty / invalid / negative values become the fallback (never throws)
-const toSafeNumber = (value, fallback = 0) => {
-    if (isEmpty(value)) return fallback
-    const number = Number(String(value).trim())
-    return Number.isFinite(number) && number >= 0 ? number : fallback
+const VALUATION_STATUS = {
+    CALCULATED: 'calculated',
+    PENDING: 'pending_scrap_details',
 }
 
-// live market price per kg in INR, e.g. { XPT: 4422345.12, ... }
-const getMarketPricesPerKg = async (symbols = METALS.map((metal) => metal.symbol)) => {
-    const perOunce = await getLatestMetalPrices(symbols, CURRENCY)
-
-    return Object.fromEntries(
-        Object.entries(perOunce).map(([symbol, price]) => [symbol, price * TROY_OZ_PER_KG])
-    )
+// decimal-safe rounding (avoids 1.005 -> 1.00 style floating-point errors); only applied to outputs
+const roundTo = (n, places) => {
+    if (!Number.isFinite(n)) return 0
+    const factor = 10 ** places
+    // the relative epsilon nudge fixes binary representation errors such as 1.005 * 100 = 100.49999999999999
+    const rounded = Math.round(Math.abs(n) * factor * (1 + Number.EPSILON)) / factor
+    return (n < 0 ? -rounded : rounded) || 0
 }
+const round2 = (n) => roundTo(n, 2)
+const round4 = (n) => roundTo(n, 4)
+const round8 = (n) => roundTo(n, 8)
+
+// price per troy ounce -> price per KG
+const ouncePriceToKg = (pricePerOunce) => pricePerOunce * TROY_OZ_PER_KG
 
 /**
- * metals: [{ symbol, name, ppm, pricePerKg, priceSource, returnRate, minimumDeduction, refiningChargePerKg }]
- * (in METALS order: platinum, palladium, rhodium)
+ * @param weight, weightUnit ('kg' | 'lb'), treatmentFee (per KG of scrap), daysOut, interestRate (% per year)
+ * @param metals [{ symbol, name, ppm, pricePerKg, priceSource, returnRate, minimumDeduction (PPM), refiningChargePerKg }]
+ *               in the order platinum, palladium, rhodium
  */
 const calculateMetalValues = ({
     weight,
@@ -55,51 +68,57 @@ const calculateMetalValues = ({
     interestRate = 0,
 }) => {
     const weightKg = weightUnit === 'lb' ? weight * KG_PER_LB : weight
+    const hasScrapDetails = weightKg > 0 && metals.some((metal) => metal.ppm > 0)
 
-    const breakdown = metals.map((metal) => {
-        const metalKg = (weightKg * metal.ppm) / PPM_DIVISOR
-        const payablePpm = Math.max(metal.ppm - metal.minimumDeduction, 0)
-        const payableKg = ((weightKg * payablePpm) / PPM_DIVISOR) * (metal.returnRate / 100)
+    const exact = metals.map((metal) => {
+        const theoreticalKg = (weightKg * metal.ppm) / PPM_DIVISOR
+        const returnedKg = (theoreticalKg * metal.returnRate) / 100
+        const minimumDeductionKg = (weightKg * metal.minimumDeduction) / PPM_DIVISOR
+        const payableKg = Math.max(Math.min(returnedKg, theoreticalKg - minimumDeductionKg), 0)
         const grossValue = payableKg * metal.pricePerKg
         const refiningCharge = payableKg * metal.refiningChargePerKg
 
-        return {
-            symbol: metal.symbol,
-            name: metal.name,
-            ppm: metal.ppm,
-            minimumDeduction: metal.minimumDeduction,
-            payablePpm: round4(payablePpm),
-            returnRate: metal.returnRate,
-            pricePerKg: round2(metal.pricePerKg),
-            priceSource: metal.priceSource,
-            refiningChargePerKg: metal.refiningChargePerKg,
-            metalWeightKg: round4(metalKg),
-            metalWeightGrams: round4(metalKg * GRAMS_PER_KG),
-            payableWeightKg: round4(payableKg),
-            payableWeightGrams: round4(payableKg * GRAMS_PER_KG),
-            grossValue: round2(grossValue),
-            refiningCharge: round2(refiningCharge),
-            value: round2(grossValue - refiningCharge),
-        }
+        return { metal, theoreticalKg, returnedKg, minimumDeductionKg, payableKg, grossValue, refiningCharge }
     })
 
-    const grossValue = breakdown.reduce((sum, item) => sum + item.grossValue, 0)
-    const totalRefiningCharge = breakdown.reduce((sum, item) => sum + item.refiningCharge, 0)
-    // treatment fee is charged per unit of the selected weight unit (kg or lb)
-    const totalTreatmentFee = weight * treatmentFee
+    const grossValue = exact.reduce((sum, item) => sum + item.grossValue, 0)
+    const totalRefiningCharge = exact.reduce((sum, item) => sum + item.refiningCharge, 0)
+    const totalTreatmentFee = hasScrapDetails ? weightKg * treatmentFee : 0
     const financeCharge = grossValue * (interestRate / 100) * (daysOut / DAYS_PER_YEAR)
     const totalValue = grossValue - totalRefiningCharge - totalTreatmentFee - financeCharge
 
-    // individual price of each metal (net metal value) and their grand total
-    const [platinum, palladium, rhodium] = breakdown
+    const breakdown = exact.map(({ metal, theoreticalKg, returnedKg, minimumDeductionKg, payableKg, grossValue: value, refiningCharge }) => ({
+        symbol: metal.symbol,
+        name: metal.name,
+        ppm: metal.ppm,
+        minimumDeduction: metal.minimumDeduction,
+        payablePpm: weightKg > 0 ? round4((payableKg / weightKg) * PPM_DIVISOR) : 0,
+        returnRate: metal.returnRate,
+        pricePerKg: round2(metal.pricePerKg),
+        priceSource: metal.priceSource,
+        refiningChargePerKg: metal.refiningChargePerKg,
+        metalWeightKg: round8(theoreticalKg),
+        metalWeightGrams: round4(theoreticalKg * GRAMS_PER_KG),
+        returnedWeightKg: round8(returnedKg),
+        minimumDeductionWeightKg: round8(minimumDeductionKg),
+        payableWeightKg: round8(payableKg),
+        payableWeightGrams: round4(payableKg * GRAMS_PER_KG),
+        grossValue: round2(value),
+        refiningCharge: round2(refiningCharge),
+        value: round2(value - refiningCharge),
+    }))
+
+    // individual net price of each metal and their grand total (summed from exact values, rounded once)
+    const net = exact.map((item) => item.grossValue - item.refiningCharge)
     const prices = {
-        platinum: platinum.value,
-        palladium: palladium.value,
-        rhodium: rhodium.value,
-        grandTotal: round2(platinum.value + palladium.value + rhodium.value),
+        platinum: round2(net[0]),
+        palladium: round2(net[1]),
+        rhodium: round2(net[2]),
+        grandTotal: round2(net[0] + net[1] + net[2]),
     }
 
     return {
+        valuationStatus: hasScrapDetails ? VALUATION_STATUS.CALCULATED : VALUATION_STATUS.PENDING,
         weightKg,
         grossValue,
         totalRefiningCharge,
@@ -111,155 +130,13 @@ const calculateMetalValues = ({
     }
 }
 
-/**
- * Pricing settings for products, loaded once per request:
- * the saved calculator settings (wl_metal_calculator), or the calculator defaults when none are saved.
- * Metal prices saved as "market" (or not saved) use the live market price per kg.
- * Never throws: when market rates are unavailable, `available` is false.
- */
-const getProductPricingSettings = async () => {
-    let record = null
-
-    try {
-        record = await metalCalculatorModel.findLatestCalculation()
-    } catch (error) {
-        console.error('Product pricing settings error:', error.message)
-    }
-
-    const metals = METALS.map((metal) => {
-        const savedPrice = record ? toSafeNumber(record[`${metal.key}PricePerKg`], null) : null
-        const useSavedPrice = record?.[`${metal.key}PriceSource`] === 'user' && savedPrice !== null
-
-        return {
-            ...metal,
-            pricePerKg: useSavedPrice ? savedPrice : null,
-            priceSource: useSavedPrice ? 'user' : 'market',
-            returnRate: Math.min(toSafeNumber(record?.[`returnRate${metal.suffix}`], DEFAULT_RETURN_RATE), 100),
-            minimumDeduction: toSafeNumber(record?.[`minimumDeduction${metal.suffix}`]),
-            refiningChargePerKg: toSafeNumber(record?.[`refiningCharge${metal.suffix}`]),
-        }
-    })
-
-    let available = true
-    const marketSymbols = metals.filter((metal) => metal.pricePerKg === null).map((metal) => metal.symbol)
-
-    if (marketSymbols.length) {
-        try {
-            const marketPrices = await getMarketPricesPerKg(marketSymbols)
-            metals.forEach((metal) => {
-                if (metal.pricePerKg === null) metal.pricePerKg = marketPrices[metal.symbol]
-            })
-        } catch (error) {
-            console.error('Product pricing market rate error:', error.message)
-            available = false
-        }
-    }
-
-    return {
-        available,
-        weightUnit: record?.weightUnit === 'lb' ? 'lb' : 'kg',
-        treatmentFee: toSafeNumber(record?.treatmentFee),
-        daysOut: toSafeNumber(record?.daysOut, DEFAULT_DAYS_OUT),
-        interestRate: toSafeNumber(record?.interestRate),
-        metals,
-    }
-}
-
-/**
- * Price of one product from its prod_weight (kg) and prod_pt / prod_pd / prod_ph (PPM).
- * Returns { productPrice, priceDetails }; productPrice is null when market rates are unavailable.
- */
-const calculateProductPrice = (product, settings) => {
-    const weightKg = toSafeNumber(product?.prodWeight)
-
-    const base = {
-        currency: CURRENCY,
-        weightKg,
-        platinumPpm: toSafeNumber(product?.prodPt),
-        palladiumPpm: toSafeNumber(product?.prodPd),
-        rhodiumPpm: toSafeNumber(product?.prodPh),
-    }
-
-    if (!settings?.available) {
-        return {
-            productPrice: null,
-            priceDetails: { ...base, platinum: null, palladium: null, rhodium: null, grandTotal: null },
-        }
-    }
-
-    const result = calculateMetalValues({
-        // treatment fee is per settings weight unit; product weight is stored in kg
-        weight: settings.weightUnit === 'lb' ? weightKg / KG_PER_LB : weightKg,
-        weightUnit: settings.weightUnit,
-        treatmentFee: settings.treatmentFee,
-        daysOut: settings.daysOut,
-        interestRate: settings.interestRate,
-        metals: settings.metals.map((metal) => ({
-            ...metal,
-            ppm: toSafeNumber(product?.[metal.productField]),
-        })),
-    })
-
-    return {
-        productPrice: round2(result.totalValue),
-        priceDetails: {
-            ...base,
-            ...result.prices,
-        },
-    }
-}
-
-/**
- * Percentage (tbl_admin.admin_cent) of the product price to display, e.g. 10 => 10%.
- * Returns null when it cannot be read; never throws.
- */
-const getProductPricePercent = async () => {
-    try {
-        const value = await adminModel.getAdminCent()
-        const percent = toSafeNumber(value, null)
-        return percent === null ? null : Math.min(percent, 100)
-    } catch (error) {
-        console.error('Product price percentage error:', error.message)
-        return null
-    }
-}
-
-/**
- * Applies the admin percentage to a calculateProductPrice() result:
- * productPrice and the metal amounts in priceDetails become `percent`% of the original;
- * originalPrice keeps the full price.
- * When the percentage is unavailable the prices are not shown (null).
- */
-const applyPricePercent = (priced, percent) => {
-    const scale = (value) =>
-        value === null || value === undefined || percent === null
-            ? null
-            : round2((value * percent) / 100)
-
-    return {
-        productPrice: scale(priced.productPrice),
-        // full calculated price before the admin_cent percentage
-        originalPrice: priced.productPrice,
-        priceDetails: {
-            ...priced.priceDetails,
-            platinum: scale(priced.priceDetails.platinum),
-            palladium: scale(priced.priceDetails.palladium),
-            rhodium: scale(priced.priceDetails.rhodium),
-            grandTotal: scale(priced.priceDetails.grandTotal),
-        },
-    }
-}
-
 module.exports = {
     CURRENCY,
     DEFAULT_RETURN_RATE,
     DEFAULT_DAYS_OUT,
+    VALUATION_STATUS,
     round2,
     round4,
-    getMarketPricesPerKg,
+    ouncePriceToKg,
     calculateMetalValues,
-    getProductPricingSettings,
-    calculateProductPrice,
-    getProductPricePercent,
-    applyPricePercent,
 }

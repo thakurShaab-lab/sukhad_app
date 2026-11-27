@@ -1,4 +1,7 @@
 const { getMetalRates } = require('../utils/metalData')
+
+// live metal rates are shown in USD (product prices stay in INR)
+const METAL_RATES_CURRENCY = 'USD'
 const { calculateMetalValue } = require('../utils/valueCalculator')
 const { validateRequestDevice } = require('./device&app.controller')
 const { convertNulls } = require('../utils/convertNulls')
@@ -15,7 +18,7 @@ const metalData = async (req, res) => {
       })
     }
 
-    const data = await getMetalRates(metals)
+    const data = await getMetalRates(metals, METAL_RATES_CURRENCY)
 
     res.status(200).json(convertNulls({
       success: true,
@@ -102,6 +105,7 @@ const calculateMetalVlue = async (req, res) => {
             message: 'Estimated value calculated successfully.',
             data: {
                 currency: rates.currency,
+                currencySymbol: rates.currencySymbol,
                 weightKg,
                 estimatedValue,
                 recoveryRate: RECOVERY_RATE,

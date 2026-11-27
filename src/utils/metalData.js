@@ -1,3 +1,5 @@
+const { currencyFields } = require('./currencySymbol')
+
 const ATOMIC_NUMBERS = {
   H: 1, He: 2, Li: 3, Be: 4, B: 5, C: 6, N: 7, O: 8, F: 9, Ne: 10,
   Na: 11, Mg: 12, Al: 13, Si: 14, P: 15, S: 16, Cl: 17, Ar: 18,
@@ -259,6 +261,7 @@ const buildMetalRates = async (requestedNames, base = 'INR') => {
 
       return {
         ...m,
+        ...currencyFields(base),
         price: round2(price),
         change: round2(change),
         changePercent:
@@ -281,7 +284,7 @@ const getMetalRates = async (requestedNames, currency = 'INR') => {
   return {
     title: 'Live Precious Metal Rates.',
     subtitle: `${base}/Troy Ounce - Updated from Metal API.`,
-    currency: base,
+    ...currencyFields(base),
     unit: 'troy oz',
     source: 'Metal API',
     updatedAt: new Date().toISOString(),
@@ -299,4 +302,90 @@ const getLatestMetalPrices = async (symbols, currency = 'INR') => {
   )
 }
 
-module.exports = { getMetalRates, getLatestMetalPrices }
+const QUOTE_TIMEOUT_MS = 10 * 1000
+
+/**
+ * Latest price per troy ounce in the requested currency, with the provider's quote time.
+ * The provider converts into the requested base currency itself (no separate exchange-rate call).
+ * Cached for 60 seconds; the cache is dropped on failure, so a failed call is never served from stale data.
+ * @returns { currency, prices: { XPT: 137547.93, ... }, timestamp (provider quote time, ISO), fetchedAt (ISO) }
+ * @throws Error with code 'INVALID_CURRENCY' when the provider rejects the currency
+ */
+const getLatestMetalQuote = (symbols, currency = 'INR') => {
+  const base = String(currency).toUpperCase()
+
+  return cached(`quote:${base}:${symbols.join(',')}`, SHORT_TTL_MS, async () => {
+    if (!BASE_URL || !API_KEY) {
+      throw new Error('Market price API is not configured')
+    }
+
+    const params = new URLSearchParams({
+      access_key: API_KEY,
+      base,
+      symbols: symbols.join(','),
+    })
+
+    let res
+    try {
+      res = await fetch(`${BASE_URL}/latest?${params}`, {
+        signal: AbortSignal.timeout(QUOTE_TIMEOUT_MS),
+      })
+    } catch (error) {
+      throw new Error(
+        error.name === 'TimeoutError' ? 'Market price API timed out' : 'Market price API is unreachable'
+      )
+    }
+
+    const json = await res.json().catch(() => null)
+
+    if (!json?.success) {
+      const info = json?.error?.info || json?.error?.type || `HTTP ${res.status}`
+      const error = new Error(`Market price API request failed: ${info}`)
+      if (/base|currency/i.test(`${json?.error?.type ?? ''} ${json?.error?.info ?? ''}`)) {
+        error.code = 'INVALID_CURRENCY'
+      }
+      throw error
+    }
+
+    const prices = Object.fromEntries(
+      symbols.map((symbol) => [symbol, pricePerOunce(json.rates || {}, symbol, base)])
+    )
+
+    return {
+      currency: base,
+      prices,
+      timestamp: Number.isFinite(json.timestamp)
+        ? new Date(json.timestamp * 1000).toISOString()
+        : null,
+      fetchedAt: new Date().toISOString(),
+    }
+  })
+}
+
+/**
+ * Live exchange rate: how many `to` units 1 `from` unit is worth (e.g. INR -> USD = 0.01078).
+ * Cached for 60 seconds; throws on failure (never returns a made-up rate).
+ */
+const getExchangeRate = (from, to) => {
+  const source = String(from).toUpperCase()
+  const target = String(to).toUpperCase()
+  if (source === target) return Promise.resolve(1)
+
+  return cached(`fx:${source}:${target}`, SHORT_TTL_MS, async () => {
+    const params = new URLSearchParams({ access_key: API_KEY, base: target, symbols: source })
+
+    const res = await fetch(`${BASE_URL}/latest?${params}`, {
+      signal: AbortSignal.timeout(QUOTE_TIMEOUT_MS),
+    })
+    const json = await res.json().catch(() => null)
+    const perTarget = json?.rates?.[source] // e.g. 92.74 INR per 1 USD
+
+    if (!json?.success || !Number.isFinite(perTarget) || perTarget <= 0) {
+      throw new Error(json?.error?.info || `Exchange rate ${source}/${target} is unavailable`)
+    }
+
+    return 1 / perTarget
+  })
+}
+
+module.exports = { getMetalRates, getLatestMetalPrices, getLatestMetalQuote, getExchangeRate }

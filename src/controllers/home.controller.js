@@ -3,12 +3,14 @@ const { resolveMediaUrl } = require('../utils/mediaUrl')
 const env = require('../config/env')
 const { convertNulls } = require('../utils/convertNulls')
 const { getMetalRates } = require('../utils/metalData')
+
+// live metal rates are shown in USD (product prices stay in INR)
+const METAL_RATES_CURRENCY = 'USD'
 const {
-    getProductPricingSettings,
-    calculateProductPrice,
+    getMarketPricesPerGram,
     getProductPricePercent,
-    applyPricePercent,
-} = require('../utils/metalPricing')
+    calculateProductPrice,
+} = require('../utils/productPricing')
 
 const getHomePage = async (req, res) => {
     try {
@@ -28,8 +30,8 @@ const getHomePage = async (req, res) => {
         const noImagePath = `${BASE_URL}/no_image.png`
 
         // featured product price = admin_cent % (tbl_admin) of the calculated metal price, same as /product-pages/list
-        const [pricingSettings, pricePercent] = await Promise.all([
-            getProductPricingSettings(),
+        const [pricesPerGram, pricePercent] = await Promise.all([
+            getMarketPricesPerGram(),
             getProductPricePercent(),
         ])
 
@@ -56,7 +58,7 @@ const getHomePage = async (req, res) => {
         homePageData.featuredProducts = await Promise.all(
             homePageData.featuredProducts.map(async (product) => ({
                 ...product,
-                ...applyPricePercent(calculateProductPrice(product, pricingSettings), pricePercent),
+                ...calculateProductPrice(product, pricesPerGram, pricePercent),
                 image_url: await resolveMediaUrl(
                     req,
                     'products',
@@ -99,7 +101,7 @@ const getHomePage = async (req, res) => {
             app_type: String(app_type).trim(),
         })
 
-        const metalRates = await getMetalRates()
+        const metalRates = await getMetalRates(undefined, METAL_RATES_CURRENCY)
 
         return res.status(200).json(convertNulls({
             success: true,
